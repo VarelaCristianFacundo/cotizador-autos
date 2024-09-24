@@ -168,7 +168,6 @@ export function App() {
             >
               <div className="grid grid-cols-1 gap-4">
                 {/* Select Marca */}
-                {/* Select Marca */}
                 <div className="space-y-2">
                   <label htmlFor="marca" className="text-gray-700">
                     Marca
@@ -182,10 +181,7 @@ export function App() {
                       console.log("Marca seleccionada:", e.target.value);
                     }}
                   >
-                    <option value="">
-                      Seleccionar{" "}
-                      <span className="hidden md:inline">Marca</span>
-                    </option>
+                    <option value="">Seleccionar Marca</option>
                     <option value="ford">Ford</option>
                     <option value="chevrolet">Chevrolet</option>
                     <option value="toyota">Toyota</option>
@@ -285,9 +281,23 @@ export function App() {
             <Swiper
               modules={[Autoplay]}
               spaceBetween={30}
-              slidesPerView={5}
               autoplay={{ delay: 2000, disableOnInteraction: false }}
               loop={true}
+              breakpoints={{
+                // Pantallas pequeñas (móviles)
+                640: {
+                  slidesPerView: 2, // Muestra 2 logos en pantallas pequeñas
+                  spaceBetween: 20, // Espacio reducido entre logos
+                },
+                // Pantallas medianas (tablets)
+                768: {
+                  slidesPerView: 3, // Muestra 3 logos en pantallas medianas
+                },
+                // Pantallas grandes (desktops)
+                1024: {
+                  slidesPerView: 5, // Muestra 5 logos en pantallas grandes
+                },
+              }}
             >
               {logos.map((company, index) => (
                 <SwiperSlide key={index}>
@@ -297,7 +307,7 @@ export function App() {
                       alt={`${company} logo`}
                       width={120}
                       height={50}
-                      className="h-12 object-contain"
+                      className="h-16 w-auto object-contain sm:h-12" // Ajuste para pantallas pequeñas
                     />
                   </div>
                 </SwiperSlide>
