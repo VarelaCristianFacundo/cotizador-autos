@@ -166,7 +166,7 @@ export function App() {
               onSubmit={handleQuoteSubmit}
               className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {/* Select Marca */}
                 {/* Select Marca */}
                 <div className="space-y-2">
