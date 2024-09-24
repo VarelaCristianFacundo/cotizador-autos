@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-
+import { FaWhatsapp } from "react-icons/fa";
 // Import Swiper React components and required modules
 import "swiper/css";
 import "swiper/css/autoplay";
@@ -447,7 +447,7 @@ export function App() {
           window.open("https://wa.me/yourwhatsappnumber", "_blank")
         }
       >
-        <MessageCircle className="w-8 h-8 text-white" />
+        <FaWhatsapp className="w-8 h-8 text-white" />
       </Button>
     </div>
   );
