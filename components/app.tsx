@@ -17,13 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import {
-  Car,
-  HelpCircle,
-  MessageCircle,
-  MousePointerClick,
-  Scale,
-} from "lucide-react";
+import { Car, HelpCircle, MousePointerClick, Scale } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -139,7 +133,7 @@ export function App() {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-600">
+                <a href="#contacto" className="text-gray-600">
                   Contacto
                 </a>
               </li>
@@ -376,7 +370,7 @@ export function App() {
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4 underline">Clientes</h3>
-              <ul className="space-y-2">
+              <ul className="space-y-2" id="contacto">
                 <li>
                   <a href="#" className="hover:underline">
                     Contacto
