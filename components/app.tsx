@@ -127,11 +127,11 @@ export function App() {
                   Auto
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <a href="#" className="text-gray-600">
                   Blog
                 </a>
-              </li>
+              </li> */}
               <li>
                 <a href="#contacto" className="text-gray-600">
                   Contacto
@@ -140,7 +140,7 @@ export function App() {
             </ul>
           </nav>
           <div className="text-right">
-            <p className="text-sm text-gray-600">0810 xxx xxxx</p>
+            {/* <p className="text-sm text-gray-600">0810 xxx xxxx</p> */}
             <p className="text-sm text-gray-600">(011) xxxx-xxxx</p>
           </div>
         </div>
