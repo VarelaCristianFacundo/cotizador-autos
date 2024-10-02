@@ -15,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Car, HelpCircle, MousePointerClick, Scale } from "lucide-react";
 import Image from "next/image";
@@ -26,10 +25,15 @@ import "swiper/css";
 import "swiper/css/autoplay";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import SelectComponent from "./ui/SelectComponent";
+import { LoginForm } from "./ui/LoginForm";
+import { DataModal } from "./ui/DataModal";
+import { getEmailUser } from "@/utils/emailUser";
+import { getToken } from "@/utils/auth";
 
 export function App() {
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [email, setEmail] = useState("");
+  const [isDataDialogOpen, setIsDataDialogOpen] = useState(false);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   // Estados para los valores seleccionados de los selects
@@ -59,13 +63,22 @@ export function App() {
 
   const handleQuoteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsEmailDialogOpen(true);
+    const emailUser = getEmailUser();
+    const token = getToken();
+    if (!emailUser || !token) {
+      setIsEmailDialogOpen(true);
+    } else if (emailUser && token) {
+      setIsDataDialogOpen(true);
+    }
+  };
+  const handleSuccessLogin = () => {
+    console.log("Login exitoso, cerrando modal");
+    setIsEmailDialogOpen(false);
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Email submitted:", email);
-    setIsEmailDialogOpen(false);
+  const handleSuccessData = () => {
+    console.log("Login exitoso, cerrando modal");
+    setIsDataDialogOpen(false);
   };
 
   // Verificar si todos los selects están completos
@@ -162,27 +175,12 @@ export function App() {
             >
               <div className="grid grid-cols-1 gap-4">
                 {/* Select Marca */}
-                <div className="space-y-2">
-                  <label htmlFor="marca" className="text-gray-700">
-                    Marca
-                  </label>
-                  <select
-                    id="marca"
-                    className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
-                    value={selectedMarca}
-                    onChange={(e) => {
-                      setSelectedMarca(e.target.value);
-                      console.log("Marca seleccionada:", e.target.value);
-                    }}
-                  >
-                    <option value="">Seleccionar Marca</option>
-                    <option value="ford">Ford</option>
-                    <option value="chevrolet">Chevrolet</option>
-                    <option value="toyota">Toyota</option>
-                    <option value="volkswagen">Volkswagen</option>
-                    <option value="renault">Renault</option>
-                  </select>
-                </div>
+                <SelectComponent
+                  label="Marca"
+                  selectedValue={selectedMarca}
+                  setSelectedValue={setSelectedMarca}
+                  endpoint="/api/marcas"
+                />
 
                 {/* Select Año */}
                 <div className="space-y-2">
@@ -204,6 +202,11 @@ export function App() {
                     <option value="2021">2021</option>
                     <option value="2020">2020</option>
                     <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                    <option value="2016">2016</option>
+                    <option value="2015">2015</option>
+                    <option value="2014">2014</option>
+                    <option value="2013">2013</option>
                   </select>
                 </div>
 
@@ -420,21 +423,25 @@ export function App() {
               seguro.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
-            <Input
-              type="email"
-              placeholder="Tu correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Button type="submit" className="w-full bg-logo-blue1">
-              Enviar
-            </Button>
-          </form>
+          <LoginForm onSuccess={handleSuccessData} />
         </DialogContent>
       </Dialog>
 
+      <Dialog open={isDataDialogOpen} onOpenChange={setIsDataDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cotización</DialogTitle>
+            <DialogDescription>DialogDescription</DialogDescription>
+          </DialogHeader>
+          <DataModal
+            ano={selectedAno}
+            marca={selectedMarca}
+            modelo={selectedModelo}
+            version={selectedVersion}
+            onSuccess={handleSuccessLogin}
+          />
+        </DialogContent>
+      </Dialog>
       <Button
         className="fixed bottom-4 right-4 rounded-full w-16 h-16 bg-green-500 hover:bg-green-600 flex items-center justify-center"
         onClick={() =>
