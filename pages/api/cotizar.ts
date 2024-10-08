@@ -1,4 +1,7 @@
 // pages/api/cotizar.ts
+import { buildUrlWithDefaults } from "@/utils/buildURL";
+import { propsAllianz, propsRus } from "@/utils/const";
+import { AllianzI, MercantilI, RusI } from "@/utils/interfaces.aseguradoras";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
@@ -22,36 +25,38 @@ export default async function handler(
         "Content-Type": "application/json",
       },
     };
-    console.info({ ano });
 
     try {
-      const apiUrl = `https://cotizador-adminse.com.ar:9443/api/cotizador?infoauto_anio=${ano}
-      &infoauto_id=0450246
-      &allianz_clausula_ajuste=20
-      &allianz_granizo=1
-      &allianz_mediopago=T
-      &allianz_periodo=S
-      &allianz_tiene_alarma=0
-      &cia=allianz
-      &client_dni=11111111
-      &client_tipo_doc=dni
-      &codigo_cia=0036
-      &codigo_postal=2000
-      &es_0km=0
-      &fecha_nacimiento=1980-01-01
-      &is_moto=0
-      &origen=padin
-      &provincia=21
-      &sexo=MALE
-      &suma_asegurada=0
-      &tipo_uso=1
-      &value=allianz
-      &producer_profile_id=12278
-      &producer_id=3346`;
+      const allianz: AllianzI = {
+        infoauto_anio: ano,
+      };
+
+      const mercantil: MercantilI = {
+        infoauto_anio: ano,
+      };
+
+      const rus: RusI = {
+        // infoauto_anio: ano,
+      };
+
+      const apiUrl: string =
+        "https://cotizador-adminse.com.ar:9443" +
+        buildUrlWithDefaults(allianz, propsAllianz);
+
+      console.info("apiUrl --->", apiUrl);
 
       // Realizando la solicitud a la API externa
       const response = await fetch(apiUrl, requestOptions);
       const data = await response.json();
+      console.info("Responso data --->", data);
+      console.info("Responso errors --->", data.cotizaciones[0].errors);
+
+      console.info("Responso coberturas --->", data.cotizaciones[0].coberturas);
+
+      console.info(
+        "Responso coberturas TIPO C --->",
+        data.cotizaciones[0].coberturas[0]
+      );
 
       if (!response.ok) {
         throw new Error(`API call failed with HTTP status ${response.status}`);
