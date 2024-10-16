@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 type Option = {
-  id: number;
-  nombre: string;
+  brand_id: string;
+  brand: string;
 };
 
 type SelectProps = {
@@ -25,7 +25,7 @@ const SelectComponent: React.FC<SelectProps> = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.info("useEffect");
+        console.log("endpoint", endpoint);
         const response = await fetch(endpoint);
         const data = await response.json();
         console.log({ data });
@@ -50,8 +50,8 @@ const SelectComponent: React.FC<SelectProps> = ({
       >
         <option value="">Seleccionar {label}</option>
         {options.map((option) => (
-          <option key={option.id} value={option.nombre}>
-            {option.nombre}
+          <option key={Number(option.brand_id)} value={option.brand}>
+            {option.brand}
           </option>
         ))}
       </select>

@@ -18,6 +18,7 @@ export default async function handler(
         .json({ message: "No authentication token provided" });
     }
 
+    console.log("token---<>", token);
     const requestOptions = {
       method: "GET",
       headers: {

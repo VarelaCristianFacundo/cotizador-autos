@@ -126,9 +126,9 @@ export function App() {
       <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <motion.img
-            src={`/images/logo.png`}
+            src={`/images/logo2.png`}
             alt="Seguros Online Logo"
-            className="h-10 md:h-20" // h-10 para móviles, h-20 para pantallas medianas en adelante
+            className="h-15 md:h-20" // h-10 para móviles, h-20 para pantallas medianas en adelante
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
@@ -179,7 +179,7 @@ export function App() {
                   label="Marca"
                   selectedValue={selectedMarca}
                   setSelectedValue={setSelectedMarca}
-                  endpoint="/api/marcas"
+                  endpoint="http://127.0.0.1:8000/brands"
                 />
 
                 {/* Select Año */}
