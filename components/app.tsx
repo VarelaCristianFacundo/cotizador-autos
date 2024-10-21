@@ -179,7 +179,7 @@ export function App() {
                   label="Marca"
                   selectedValue={selectedMarca}
                   setSelectedValue={setSelectedMarca}
-                  endpoint="http://127.0.0.1:8000/brands"
+                  endpoint="/api/marcas"
                 />
 
                 {/* Select Año */}
