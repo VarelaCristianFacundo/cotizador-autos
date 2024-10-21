@@ -1,3 +1,4 @@
+import { fetchBrands } from "@/services/brands";
 import React, { useEffect, useState } from "react";
 
 type Option = {
@@ -9,7 +10,6 @@ type SelectProps = {
   label: string;
   selectedValue: string;
   setSelectedValue: React.Dispatch<React.SetStateAction<string>>;
-  endpoint: string;
   className?: string;
 };
 
@@ -17,25 +17,28 @@ const SelectComponent: React.FC<SelectProps> = ({
   label,
   selectedValue,
   setSelectedValue,
-  endpoint,
   className,
 }) => {
   const [options, setOptions] = useState<Option[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        console.log("endpoint", endpoint);
-        const response = await fetch(endpoint);
-        const data = await response.json();
-        console.log({ data });
+        const data = await fetchBrands();
         setOptions(data);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error desconocido");
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchData();
-  }, [endpoint]);
+  }, []);
 
   return (
     <div className={className}>
@@ -47,13 +50,18 @@ const SelectComponent: React.FC<SelectProps> = ({
         className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
         value={selectedValue}
         onChange={(e) => setSelectedValue(e.target.value)}
+        disabled={loading || error !== null}
       >
-        <option value="">Seleccionar {label}</option>
-        {options.map((option) => (
-          <option key={Number(option.brand_id)} value={option.brand}>
-            {option.brand}
-          </option>
-        ))}
+        <option value="">{loading ? "Cargando..." : `Seleccionar ${label}`}</option>
+        {error ? (
+          <option value="" disabled>{`Error: ${error}`}</option>
+        ) : (
+          options.map((option) => (
+            <option key={option.brand_id} value={option.brand}>
+              {option.brand}
+            </option>
+          ))
+        )}
       </select>
     </div>
   );

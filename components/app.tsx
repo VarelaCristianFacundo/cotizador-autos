@@ -11,7 +11,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -20,26 +19,25 @@ import { Car, HelpCircle, MousePointerClick, Scale } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
-// Import Swiper React components and required modules
 import "swiper/css";
 import "swiper/css/autoplay";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import SelectComponent from "./ui/SelectComponent";
-import { LoginForm } from "./ui/LoginForm";
+import AutocompleteComponent from "./ui/AutocompleteComponent";
 import { DataModal } from "./ui/DataModal";
-import { getEmailUser } from "@/utils/emailUser";
-import { getToken } from "@/utils/auth";
+import SelectComponent from "./ui/SelectComponent";
 
 export function App() {
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [isDataDialogOpen, setIsDataDialogOpen] = useState(false);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const [cotizaciones, setCotizaciones] = useState<
+    Array<{ aseguradora: string; precio: number; cobertura: string }>
+  >([]);
 
-  // Estados para los valores seleccionados de los selects
   const [selectedMarca, setSelectedMarca] = useState("");
   const [selectedAno, setSelectedAno] = useState("");
   const [selectedModelo, setSelectedModelo] = useState("");
+  const [selectedModeloId, setSelectedModeloId] = useState("");
   const [selectedVersion, setSelectedVersion] = useState("");
 
   const logos = [
@@ -63,25 +61,16 @@ export function App() {
 
   const handleQuoteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const emailUser = getEmailUser();
-    const token = getToken();
-    if (!emailUser || !token) {
-      setIsEmailDialogOpen(true);
-    } else if (emailUser && token) {
-      setIsDataDialogOpen(true);
-    }
+    setIsEmailDialogOpen(true);
   };
-  const handleSuccessLogin = () => {
-    console.log("Login exitoso, cerrando modal");
+
+  const handleSuccessData = (
+    data: Array<{ aseguradora: string; precio: number; cobertura: string }>
+  ) => {
+    setCotizaciones(data);
     setIsEmailDialogOpen(false);
   };
 
-  const handleSuccessData = () => {
-    console.log("Login exitoso, cerrando modal");
-    setIsDataDialogOpen(false);
-  };
-
-  // Verificar si todos los selects están completos
   const isFormComplete =
     selectedMarca && selectedAno && selectedModelo && selectedVersion;
 
@@ -128,7 +117,7 @@ export function App() {
           <motion.img
             src={`/images/logo2.png`}
             alt="Seguros Online Logo"
-            className="h-15 md:h-20" // h-10 para móviles, h-20 para pantallas medianas en adelante
+            className="h-15 md:h-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
@@ -140,11 +129,6 @@ export function App() {
                   Auto
                 </a>
               </li>
-              {/* <li>
-                <a href="#" className="text-gray-600">
-                  Blog
-                </a>
-              </li> */}
               <li>
                 <a href="#contacto" className="text-gray-600">
                   Contacto
@@ -152,10 +136,6 @@ export function App() {
               </li>
             </ul>
           </nav>
-          <div className="text-right">
-            {/* <p className="text-sm text-gray-600">0810 xxx xxxx</p> */}
-            <p className="text-sm text-gray-600">(011) xxxx-xxxx</p>
-          </div>
         </div>
       </header>
 
@@ -179,7 +159,6 @@ export function App() {
                   label="Marca"
                   selectedValue={selectedMarca}
                   setSelectedValue={setSelectedMarca}
-                  endpoint="/api/marcas"
                 />
 
                 {/* Select Año */}
@@ -191,51 +170,23 @@ export function App() {
                     id="ano"
                     className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
                     value={selectedAno}
-                    onChange={(e) => {
-                      setSelectedAno(e.target.value);
-                      console.log("Año seleccionado:", e.target.value);
-                    }}
+                    onChange={(e) => setSelectedAno(e.target.value)}
                   >
                     <option value="">Seleccionar Año</option>
                     <option value="2023">2023</option>
                     <option value="2022">2022</option>
                     <option value="2021">2021</option>
-                    <option value="2020">2020</option>
-                    <option value="2019">2019</option>
-                    <option value="2018">2018</option>
-                    <option value="2016">2016</option>
-                    <option value="2015">2015</option>
-                    <option value="2014">2014</option>
-                    <option value="2013">2013</option>
-                    <option value="2012">2012</option>
-                    <option value="2011">2011</option>
-                    <option value="2010">2010</option>
-                    <option value="2009">2009</option>
                   </select>
                 </div>
 
                 {/* Select Modelo */}
-                <div className="space-y-2">
-                  <label htmlFor="modelo" className="text-gray-700">
-                    Modelo
-                  </label>
-                  <select
-                    id="modelo"
-                    className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
-                    value={selectedModelo}
-                    onChange={(e) => {
-                      setSelectedModelo(e.target.value);
-                      console.log("Modelo seleccionado:", e.target.value);
-                    }}
-                  >
-                    <option value="">Seleccionar Modelo</option>
-                    <option value="focus">Focus</option>
-                    <option value="cruze">Cruze</option>
-                    <option value="corolla">Corolla</option>
-                    <option value="golf">Golf</option>
-                    <option value="clio">Clio</option>
-                  </select>
-                </div>
+                <AutocompleteComponent
+                  anio={selectedAno}
+                  marca={selectedMarca}
+                  selectedModelo={selectedModelo}
+                  setSelectedModelo={setSelectedModelo}
+                  setSelectedModeloId={setSelectedModeloId} // Capturar el ID del modelo
+                />
 
                 {/* Select Versión */}
                 <div className="space-y-2">
@@ -244,18 +195,14 @@ export function App() {
                   </label>
                   <select
                     id="version"
-                    className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
+                    className="block w-full p-2 border border-gray-300 rounded-lg"
                     value={selectedVersion}
-                    onChange={(e) => {
-                      setSelectedVersion(e.target.value);
-                      console.log("Versión seleccionada:", e.target.value);
-                    }}
+                    onChange={(e) => setSelectedVersion(e.target.value)}
                   >
                     <option value="">Seleccionar Versión</option>
                     <option value="base">Base</option>
                     <option value="mid">Media</option>
                     <option value="top">Full</option>
-                    <option value="sport">Sport</option>
                   </select>
                 </div>
               </div>
@@ -263,20 +210,51 @@ export function App() {
               {/* Botón de Cotizar */}
               <Button
                 type="submit"
-                className={`w-full mt-6 ${
-                  isFormComplete
-                    ? "bg-logo-blue1 hover:bg-logo-blue2"
-                    : "bg-gray-300 cursor-not-allowed"
-                }`}
+                className={`w-full mt-6 ${isFormComplete ? "bg-logo-blue1" : "bg-gray-300"
+                  }`}
                 disabled={!isFormComplete}
               >
-                COTIZAR
+                Cotizar
               </Button>
             </form>
           </div>
         </section>
 
-        {/* Section de Cards */}
+        {/* Modal de cotización */}
+        <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Datos adicionales para cotización</DialogTitle>
+            </DialogHeader>
+            <DataModal
+              onSuccess={handleSuccessData}
+              onClose={() => setIsEmailDialogOpen(false)}
+              ano={selectedAno}
+              modelId={selectedModeloId}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Mostrar cotizaciones */}
+        {cotizaciones.length > 0 && (
+          <section className="py-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              {cotizaciones.map((cotizacion, index) => (
+                <Card key={`cotizacion-${cotizacion.aseguradora}-${index}`}>
+                  <CardHeader>
+                    <CardTitle>{cotizacion.aseguradora}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>Precio: {cotizacion.precio}</p>
+                    <p>Cobertura: {cotizacion.cobertura}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Carrusel de logos */}
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Swiper
@@ -285,30 +263,20 @@ export function App() {
               autoplay={{ delay: 2000, disableOnInteraction: false }}
               loop={true}
               breakpoints={{
-                // Pantallas pequeñas (móviles)
-                640: {
-                  slidesPerView: 2, // Muestra 2 logos en pantallas pequeñas
-                  spaceBetween: 20, // Espacio reducido entre logos
-                },
-                // Pantallas medianas (tablets)
-                768: {
-                  slidesPerView: 3, // Muestra 3 logos en pantallas medianas
-                },
-                // Pantallas grandes (desktops)
-                1024: {
-                  slidesPerView: 5, // Muestra 5 logos en pantallas grandes
-                },
+                640: { slidesPerView: 2, spaceBetween: 20 },
+                768: { slidesPerView: 3 },
+                1024: { slidesPerView: 5 },
               }}
             >
               {logos.map((company, index) => (
-                <SwiperSlide key={index}>
+                <SwiperSlide key={`company-${company}-${index}`}>
                   <div className="flex justify-center">
                     <Image
                       src={`/images/${company}.png`}
                       alt={`${company} logo`}
                       width={120}
                       height={50}
-                      className="h-16 w-auto object-contain sm:h-12" // Ajuste para pantallas pequeñas
+                      className="h-16 w-auto object-contain sm:h-12"
                     />
                   </div>
                 </SwiperSlide>
@@ -317,12 +285,12 @@ export function App() {
           </div>
         </section>
 
-        {/* Cards section */}
+        {/* Cards de información */}
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {cardData.map((card, index) => (
-                <Card key={index} className="flex flex-col shadow-lg">
+                <Card key={`card-${index}`} className="flex flex-col shadow-lg">
                   <CardHeader>
                     <div className="flex items-center space-x-4">
                       {card.icon}
@@ -330,9 +298,7 @@ export function App() {
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow">
-                    <p>
-                      {expandedCard === index ? card.fullText : card.summary}
-                    </p>
+                    <p>{expandedCard === index ? card.fullText : card.summary}</p>
                   </CardContent>
                   <CardFooter>
                     <Button
@@ -340,7 +306,7 @@ export function App() {
                       onClick={() =>
                         setExpandedCard(expandedCard === index ? null : index)
                       }
-                      className="transition-all bg-logo-blue1 hover:bg-logo-blue2 text-white hover:text-white"
+                      className="transition-all bg-logo-blue1 hover:bg-logo-blue2 text-white"
                     >
                       {expandedCard === index ? "Mostrar menos" : "Ver más"}
                     </Button>
@@ -352,6 +318,7 @@ export function App() {
         </section>
       </main>
 
+      {/* Footer */}
       <footer className="bg-logo-blue1 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -408,49 +375,15 @@ export function App() {
               productores asesores de seguros conforme surge de la Ley 22.400,
               no revistiendo el carácter de compañía de seguros y se encuentra
               registrada con Matrícula 1174, expedida por la Superintendencia de
-              Seguros de la Nación (www.ssn.gov.ar #xxx-xxxx o 0800-xxx-xxxx).
-              Mazzulla y Padin utiliza la marca segurarse.com.ar bajo licencia
-              de su titular, Sr. Alberto Gabriel. Todos los productos y nombres
-              de productos mencionados de aquí en adelante son los nombres de
-              marcas o las marcas registradas de sus respectivos dueños.
+              Seguros de la Nación.
             </p>
           </div>
         </div>
       </footer>
 
-      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Suscríbete para recibir tu cotización</DialogTitle>
-            <DialogDescription>
-              Ingresa tu correo electrónico para recibir la cotización de tu
-              seguro.
-            </DialogDescription>
-          </DialogHeader>
-          <LoginForm onSuccess={handleSuccessData} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isDataDialogOpen} onOpenChange={setIsDataDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cotización</DialogTitle>
-            <DialogDescription>DialogDescription</DialogDescription>
-          </DialogHeader>
-          <DataModal
-            ano={selectedAno}
-            marca={selectedMarca}
-            modelo={selectedModelo}
-            version={selectedVersion}
-            onSuccess={handleSuccessLogin}
-          />
-        </DialogContent>
-      </Dialog>
       <Button
-        className="fixed bottom-4 right-4 rounded-full w-16 h-16 bg-green-500 hover:bg-green-600 flex items-center justify-center"
-        onClick={() =>
-          window.open("https://wa.me/yourwhatsappnumber", "_blank")
-        }
+        className="fixed bottom-4 right-4 rounded-full w-16 h-16 bg-logo-blue1 hover:bg-logo-blue2 flex items-center justify-center"
+        onClick={() => window.open("https://wa.me/+5491133598514", "_blank")}
       >
         <FaWhatsapp className="w-8 h-8 text-white" />
       </Button>

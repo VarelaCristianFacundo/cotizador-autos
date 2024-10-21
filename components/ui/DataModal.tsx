@@ -1,58 +1,61 @@
-import { getToken } from "@/utils/auth";
+import { Button } from "@/components/ui/button";
+import { fetchQuote } from "@/services/quote";
 import React, { useState } from "react";
 
-interface DataProps {
-  onSuccess?: () => void;
-  marca: string;
-  ano: string;
-  modelo: string;
-  version: string;
-}
+// const fetchToken = async (): Promise<string> => {
+//   try {
+//     const response = await fetch("http://127.0.0.1:8000/auth");
+//     const token = await response.json();
+//     return token;
+//   } catch (error) {
+//     console.error("Error al obtener el token:", error);
+//     throw new Error("No se pudo obtener el token");
+//   }
+// };
 
-export const DataModal: React.FC<DataProps> = ({
+interface DataModalProps {
+  onSuccess: (cotizaciones: Cotizacion[]) => void;
+  onClose: () => void;
+  ano: string;
+  modelId: string;
+}
+type Cotizacion = {
+  aseguradora: string;
+  precio: number;
+  cobertura: string;
+};
+export const DataModal: React.FC<DataModalProps> = ({
   onSuccess,
-  marca,
+  onClose,
   ano,
-  modelo,
-  version,
+  modelId,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [codigoPostal, setCodigoPostal] = useState("");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
-    setError(null);
-    const token = getToken();
 
     try {
-      const response = await fetch("/api/cotizar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Asegúrate de enviar también el token de autenticación si es necesario
-        },
-        body: JSON.stringify({ marca, ano, modelo, version, token }),
-      });
+      const quoteData = {
+        id_modelo: modelId,
+        anio: ano,
+        tipo_vehiculo: "1",
+        tipo_uso: "1",
+        es_0_km: "1",
+        location_id: "3177",
+        is_moto: "0",
+        provincia: "2",
+        codigo_postal: codigoPostal,
+      };
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      console.info({ data });
+      const quoteResponse = await fetchQuote(quoteData);
+      onSuccess(quoteResponse);
       setLoading(false);
-
-      // Llama al callback onSuccess si existe y la respuesta es exitosa
-      if (onSuccess) {
-        onSuccess();
-      }
-
-      // Aquí podrías redirigir al usuario o mostrar un mensaje de éxito
-      alert("Cotización realizada con éxito");
-    } catch (error: any) {
-      setError(error.message);
+      onClose();
+    } catch (error) {
+      console.error("Error al cotizar:", error);
       setLoading(false);
     }
   };
@@ -60,16 +63,23 @@ export const DataModal: React.FC<DataProps> = ({
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <h1>Cotización de Vehículo</h1>
-        <p>Marca: {marca}</p>
-        <p>Año: {ano}</p>
-        <p>Modelo: {modelo}</p>
-        <p>Versión: {version}</p>
-        <button type="submit" disabled={loading}>
+        <h1 className="text-lg font-semibold">Completa los datos para cotizar</h1>
+
+        <div className="mt-4">
+          <label>Código Postal:</label>
+          <input
+            type="text"
+            value={codigoPostal}
+            onChange={(e) => setCodigoPostal(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+            required
+          />
+        </div>
+
+        <Button type="submit" className="w-full mt-4" disabled={loading}>
           {loading ? "Cotizando..." : "Cotizar"}
-        </button>
+        </Button>
       </form>
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
     </div>
   );
 };
