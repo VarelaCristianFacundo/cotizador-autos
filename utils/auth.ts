@@ -27,7 +27,11 @@ export const fetchToken = async () => {
 
       const data = await response.json()
       token = data // El token es el cuerpo de la respuesta
-      saveToken(token) // Guardar el token en localStorage para futuras solicitudes
+      if (token) {
+        saveToken(token) // Guardar el token en localStorage solo si es válido
+      } else {
+        throw new Error('Token es nulo o inválido')
+      }
     } catch (error) {
       console.error('Error al obtener el token:', error)
       throw error
