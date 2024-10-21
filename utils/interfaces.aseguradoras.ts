@@ -1,0 +1,81 @@
+export interface AllianzI {
+  [key: string]: any;
+  infoauto_anio?: any;
+  infoauto_id?: any;
+  allianz_clausula_ajuste?: any;
+  allianz_granizo?: any;
+  allianz_mediopago?: any;
+  allianz_periodo?: any;
+  allianz_tiene_alarma?: any;
+  cia?: any;
+  client_dni?: any;
+  client_tipo_doc?: any;
+  codigo_cia?: any;
+  codigo_postal?: any;
+  es_0km?: any;
+  fecha_nacimiento?: any;
+  is_moto?: any;
+  origen?: any;
+  provincia?: any;
+  sexo?: any;
+  suma_asegurada?: any;
+  tipo_uso?: any;
+  value?: any;
+  producer_profile_id?: any;
+  producer_id?: any;
+}
+
+export interface MercantilI {
+  [key: string]: any;
+  client_dni?: any;
+  client_tipo_doc?: any;
+  codigo_postal?: any;
+  mercantil_localidad?: any;
+  es_0km?: any;
+  fecha_nacimiento?: any;
+  is_moto?: any;
+  mercantil_ajuste?: any;
+  mercantil_bonificacion?: any;
+  mercantil_comision?: any;
+  mercantil_formapago?: any;
+  mercantil_gnc?: any;
+  mercantil_iva?: any;
+  mercantil_periodo?: any;
+  mercantil_rastreo?: any;
+  modo_suma_asegurada?: any;
+  origen?: any;
+  producer_id?: any;
+  producer_profile_id?: any;
+  provincia?: any;
+  sexo?: any;
+  suma_asegurada?: any;
+  cia?: any;
+  infoauto_id?: any;
+  infoauto_anio?: any;
+}
+export interface RusI {
+  [key: string]: any;
+  infoauto_anio?: any;
+  rand_id?: any;
+  model_id?: any;
+  infoauto_id?: any;
+  cia?: any;
+  codigo_cia?: any;
+  codigo_postal?: any;
+  rus_localidad?: any;
+  es_0km?: any;
+  fecha_nacimiento?: any;
+  is_moto?: any;
+  origen?: any;
+  producer_id?: any;
+  producer_profile_id?: any;
+  provincia?: any;
+  rus_ajuste?: any;
+  rus_control_sat?: any;
+  rus_cuotas?: any;
+  rus_gnc?: any;
+  rus_iva?: any;
+  rus_rastreo_rus?: any;
+  rus_vigencia?: any;
+  sexo?: any;
+}
