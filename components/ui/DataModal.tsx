@@ -2,11 +2,15 @@ import { Button } from "@/components/ui/button";
 import { fetchLocationsByProvince, fetchProvinces } from "@/services/locations"; // Importar servicios
 import { fetchQuote } from "@/services/quote";
 import React, { useEffect, useState } from "react";
-
+interface CompanyData {
+  cotizacion_id: number;
+  cotizaciones: Cotizacion[];
+}
 interface Province { id: string; nombre: string; }
+type ApiResponse = Record<string, CompanyData>;
 
 interface DataModalProps {
-  onSuccess: (cotizaciones: Cotizacion[]) => void;
+  onSuccess: (data: ApiResponse) => void; // Cambiado a ApiResponse
   onClose: () => void;
   ano: string;
   modelId: string;
