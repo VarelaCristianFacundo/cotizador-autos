@@ -9,13 +9,12 @@ export const fetchQuote = async (quoteData: any) => {
     })
 
     if (!response.ok) {
-      throw new Error('Error al realizar la solicitud de cotización')
+      throw new Error(`Error: ${response.status}`)
     }
-
-    const data = await response.json()
-    return data
+    return await response.json()
   } catch (error) {
-    console.error('Error en fetchQuote:', error)
-    throw error
+    throw new Error(
+      error instanceof Error ? error.message : 'Error al obtener la cotización'
+    )
   }
 }

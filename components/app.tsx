@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
-import { Car, HelpCircle, MousePointerClick, Scale } from "lucide-react";
+import { Car, HelpCircle, Moon, MousePointerClick, Scale, Sun } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -28,51 +28,71 @@ import { DataModal } from "./ui/DataModal";
 import SelectComponent from "./ui/SelectComponent";
 
 export function App() {
-  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [cotizaciones, setCotizaciones] = useState<
     Array<{ aseguradora: string; precio: number; cobertura: string }>
   >([]);
-
   const [selectedMarca, setSelectedMarca] = useState("");
   const [selectedAno, setSelectedAno] = useState("");
   const [selectedModelo, setSelectedModelo] = useState("");
   const [selectedModeloId, setSelectedModeloId] = useState("");
-  const [selectedVersion, setSelectedVersion] = useState("");
+  const [selectedCoverage, setSelectedCoverage] = useState<string | null>(null);
+  const [isCoverageModalOpen, setIsCoverageModalOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   const logos = [
     "allianz",
-    "bbva",
-    "experta",
-    "galeno",
+    "atm",
+    "fedpat",
     "integrity",
-    "lasegunda",
-    "mapfre",
     "mercantil",
-    "meridional",
-    "provincia",
+    "rivadavia",
     "rus",
-    "sancor",
-    "sancristobal",
-    "smg",
-    "triunfo",
-    "zurich",
   ];
 
   const handleQuoteSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsEmailDialogOpen(true);
   };
+  const handleSuccessData = (data: ApiResponse) => {
+    const cotizacionesArray: CotizacionItem[] = [];
 
-  const handleSuccessData = (
-    data: Array<{ aseguradora: string; precio: number; cobertura: string }>
-  ) => {
-    setCotizaciones(data);
+    Object.entries(data).forEach(([companyName, companyData]) => {
+      if (companyData && Array.isArray(companyData.cotizaciones)) {
+        companyData.cotizaciones.forEach((cotizacion) => {
+          const sumaAsegurada = cotizacion.suma_asegurada || 0; // Accede a `suma_asegurada`
+
+          if (Array.isArray(cotizacion.coberturas)) {
+            cotizacion.coberturas.forEach((cobertura) => {
+              if (Array.isArray(cobertura.subtipos)) {
+                cobertura.subtipos.forEach((subtipo) => {
+                  cotizacionesArray.push({
+                    aseguradora: companyName.toUpperCase(),
+                    precio: parseFloat(subtipo.premio) || 0,
+                    cobertura: subtipo.descripcion_cobertura || 'Descripción no disponible',
+                    sumaAsegurada, // Agrega suma asegurada a cada cotización
+                  });
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Actualiza el estado con cotizaciones que incluyen `sumaAsegurada`
+    setCotizaciones(cotizacionesArray);
     setIsEmailDialogOpen(false);
   };
 
+  const openCoverageModal = (cobertura: string) => {
+    setSelectedCoverage(cobertura);
+    setIsCoverageModalOpen(true);
+  };
+
   const isFormComplete =
-    selectedMarca && selectedAno && selectedModelo && selectedVersion;
+    selectedMarca && selectedAno && selectedModelo;
 
   const cardData = [
     {
@@ -109,30 +129,69 @@ export function App() {
     },
   ];
 
+  const groupedCotizaciones = cotizaciones.reduce((acc, cotizacion) => {
+    if (!acc[cotizacion.aseguradora]) {
+      acc[cotizacion.aseguradora] = [];
+    }
+    acc[cotizacion.aseguradora].push(cotizacion);
+    return acc;
+  }, {} as Record<string, Array<{ aseguradora: string; precio: number; cobertura: string }>>);
+
+  interface Subtipo {
+    cobertura_cia_id: number;
+    cobertura_cia_code: string;
+    premio: string;
+    descripcion_cobertura: string;
+  }
+
+  interface Cobertura {
+    tipo_cobertura: string;
+    subtipos: Subtipo[];
+  }
+
+  interface Cotizacion {
+    cia: string;
+    codigo_cia: string;
+    suma_asegurada: number;
+    coberturas: Cobertura[];
+  }
+
+  interface CompanyData {
+    cotizacion_id: number;
+    cotizaciones: Cotizacion[];
+  }
+
+  type ApiResponse = Record<string, CompanyData>;
+
+  interface CotizacionItem {
+    aseguradora: string;
+    precio: number;
+    cobertura: string;
+    sumaAsegurada: number;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
+    <div className={`min-h-screen ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}>
       <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-center items-center">
           <motion.img
-            src={`/images/logo2.png`}
+            src={`/images/logo.png`}
             alt="Seguros Online Logo"
             className="h-15 md:h-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
           />
-          <nav>
-            <ul className="flex space-x-4">
+          <nav style={{ display: 'none' }}>
+            <ul className="flex space-x-4 items-center">
               <li>
-                <a href="#" className="text-logo-blue1">
-                  Auto
-                </a>
-              </li>
-              <li>
-                <a href="#contacto" className="text-gray-600">
-                  Contacto
-                </a>
+                <Button
+                  variant="outline"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="flex items-center justify-center "
+                >
+                  {darkMode ? <Sun className="w-6 h-6 text-yellow-500" /> : <Moon className="w-6 h-6 text-blue-800" />}
+                </Button>
               </li>
             </ul>
           </nav>
@@ -142,10 +201,10 @@ export function App() {
       {/* Main content */}
       <main className="pt-20">
         <section
-          className="bg-cover bg-center py-16"
+          className="bg-cover bg-center py-28"
           style={{ backgroundImage: `url('/images/auto1.png')` }}
         >
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto px-4 sm:px-28 lg:px-32">
             <h1 className="text-3xl font-bold text-center mb-8 text-logo-blue1">
               Seguros para Autos
             </h1>
@@ -176,6 +235,27 @@ export function App() {
                     <option value="2023">2023</option>
                     <option value="2022">2022</option>
                     <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                    <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                    <option value="2015">2015</option>
+                    <option value="2014">2014</option>
+                    <option value="2013">2013</option>
+                    <option value="2012">2012</option>
+                    <option value="2011">2011</option>
+                    <option value="2010">2010</option>
+                    <option value="2009">2009</option>
+                    <option value="2008">2008</option>
+                    <option value="2007">2007</option>
+                    <option value="2006">2006</option>
+                    <option value="2005">2005</option>
+                    <option value="2004">2004</option>
+                    <option value="2003">2003</option>
+                    <option value="2002">2002</option>
+                    <option value="2001">2001</option>
+                    <option value="2000">2000</option>
                   </select>
                 </div>
 
@@ -188,23 +268,6 @@ export function App() {
                   setSelectedModeloId={setSelectedModeloId} // Capturar el ID del modelo
                 />
 
-                {/* Select Versión */}
-                <div className="space-y-2">
-                  <label htmlFor="version" className="text-gray-700">
-                    Versión
-                  </label>
-                  <select
-                    id="version"
-                    className="block w-full p-2 border border-gray-300 rounded-lg"
-                    value={selectedVersion}
-                    onChange={(e) => setSelectedVersion(e.target.value)}
-                  >
-                    <option value="">Seleccionar Versión</option>
-                    <option value="base">Base</option>
-                    <option value="mid">Media</option>
-                    <option value="top">Full</option>
-                  </select>
-                </div>
               </div>
 
               {/* Botón de Cotizar */}
@@ -235,27 +298,66 @@ export function App() {
           </DialogContent>
         </Dialog>
 
-        {/* Mostrar cotizaciones */}
-        {cotizaciones.length > 0 && (
-          <section className="py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-              {cotizaciones.map((cotizacion, index) => (
-                <Card key={`cotizacion-${cotizacion.aseguradora}-${index}`}>
-                  <CardHeader>
-                    <CardTitle>{cotizacion.aseguradora}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Precio: {cotizacion.precio}</p>
-                    <p>Cobertura: {cotizacion.cobertura}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Mostrar cotizaciones agrupadas por aseguradora */}
+        <div className="py-8 ${darkMode ? 'bg-gray-800' : 'bg-white'}">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            {Object.entries(groupedCotizaciones).map(([aseguradora, cotizaciones]) => (
+              <div key={aseguradora} className="bg-${darkMode ? 'gray-700' : 'white'} shadow-lg mb-6 p-4 rounded-lg">
+                <div className="flex items-center space-x-4 mb-4">
+                  <Image
+                    src={`/images/${aseguradora.toLowerCase()}.png`}
+                    alt={`${aseguradora} logo`}
+                    width={80}
+                    height={40}
+                    className="h-12 w-auto object-contain"
+                  />
+                  <div>
+                    <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-600'}`}>
+                      {aseguradora === 'fedpat' ? 'Federación Patronal' : aseguradora === 'mercantil' ? 'Mercantil Andina' : aseguradora.charAt(0).toUpperCase() + aseguradora.slice(1)}
+                    </h3>
+                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Suma asegurada: ${cotizaciones[0]?.sumaAsegurada || 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-8">
+                  {cotizaciones.map((cotizacion, index) => (
+                    <Card key={index} className={`shadow-md bg-${darkMode ? 'gray-800' : 'white'} text-${darkMode ? 'white' : 'black'}`}>
+                      <CardHeader>
+                        <CardTitle>Precio: ${cotizacion.precio}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Button
+                          variant="outline"
+                          onClick={() => openCoverageModal(cotizacion.cobertura)}
+                          className="mt-4"
+                        >
+                          Ver Cobertura
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Modal para mostrar la cobertura completa */}
+          <Dialog
+            open={isCoverageModalOpen}
+            onOpenChange={setIsCoverageModalOpen}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cobertura Detallada</DialogTitle>
+              </DialogHeader>
+              <div>
+                <p>{selectedCoverage}</p>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         {/* Carrusel de logos */}
-        <section className="py-16">
+        <section className="py-2">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Swiper
               modules={[Autoplay]}
