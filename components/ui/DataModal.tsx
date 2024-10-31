@@ -1,26 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { fetchLocationsByProvince, fetchProvinces } from "@/services/locations"; // Importar servicios
 import { fetchQuote } from "@/services/quote";
+import {
+  ApiResponse,
+  Localidad
+} from '@/utils/types';
 import React, { useEffect, useState } from "react";
-interface CompanyData {
-  cotizacion_id: number;
-  cotizaciones: Cotizacion[];
-}
+
 interface Province { id: string; nombre: string; }
-type ApiResponse = Record<string, CompanyData>;
 
 interface DataModalProps {
-  onSuccess: (data: ApiResponse) => void; // Cambiado a ApiResponse
+  onSuccess: (data: ApiResponse) => void;
   onClose: () => void;
   ano: string;
   modelId: string;
 }
 
-type Cotizacion = {
-  aseguradora: string;
-  precio: number;
-  cobertura: string;
-};
+
 export const DataModal: React.FC<DataModalProps> = ({
   onSuccess,
   onClose,
@@ -33,7 +29,7 @@ export const DataModal: React.FC<DataModalProps> = ({
   const [codigoPostal, setCodigoPostal] = useState("");
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [selectedProvince, setSelectedProvince] = useState("");
-  const [locations, setLocations] = useState([]);
+  const [locations, setLocations] = useState<Localidad[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
 
   useEffect(() => {
@@ -81,9 +77,10 @@ export const DataModal: React.FC<DataModalProps> = ({
 
     if (location) {
       setSelectedLocation(locationId);
-      setCodigoPostal(location.codigo_postal); // Autocompleta el código postal
+      setCodigoPostal(location.codigo_postal); // Ahora TypeScript reconoce codigo_postal
     }
   };
+
 
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -110,7 +107,7 @@ export const DataModal: React.FC<DataModalProps> = ({
       };
 
       const quoteResponse = await fetchQuote(quoteData);
-      onSuccess(quoteResponse); // Llama a la función de éxito para mostrar la cotización
+      onSuccess(quoteResponse); // Ahora pasa los datos con el tipo correcto
       setLoading(false);
       onClose();
     } catch (error) {

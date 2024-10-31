@@ -14,6 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  ApiResponse,
+  CotizacionItem
+} from '@/utils/types';
 import { motion } from "framer-motion";
 import { Car, HelpCircle, Moon, MousePointerClick, Scale, Sun } from "lucide-react";
 import Image from "next/image";
@@ -30,9 +34,8 @@ import SelectComponent from "./ui/SelectComponent";
 export function App() {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [cotizaciones, setCotizaciones] = useState<
-    Array<{ aseguradora: string; precio: number; cobertura: string }>
-  >([]);
+  const [cotizaciones, setCotizaciones] = useState<CotizacionItem[]>([]);
+
   const [selectedMarca, setSelectedMarca] = useState("");
   const [selectedAno, setSelectedAno] = useState("");
   const [selectedModelo, setSelectedModelo] = useState("");
@@ -61,7 +64,7 @@ export function App() {
     Object.entries(data).forEach(([companyName, companyData]) => {
       if (companyData && Array.isArray(companyData.cotizaciones)) {
         companyData.cotizaciones.forEach((cotizacion) => {
-          const sumaAsegurada = cotizacion.suma_asegurada || 0; // Accede a `suma_asegurada`
+          const sumaAsegurada = cotizacion.suma_asegurada || 0;
 
           if (Array.isArray(cotizacion.coberturas)) {
             cotizacion.coberturas.forEach((cobertura) => {
@@ -71,7 +74,7 @@ export function App() {
                     aseguradora: companyName.toUpperCase(),
                     precio: parseFloat(subtipo.premio) || 0,
                     cobertura: subtipo.descripcion_cobertura || 'Descripción no disponible',
-                    sumaAsegurada, // Agrega suma asegurada a cada cotización
+                    sumaAsegurada,
                   });
                 });
               }
@@ -81,7 +84,7 @@ export function App() {
       }
     });
 
-    // Actualiza el estado con cotizaciones que incluyen `sumaAsegurada`
+    // Actualiza el estado con las cotizaciones procesadas
     setCotizaciones(cotizacionesArray);
     setIsEmailDialogOpen(false);
   };
@@ -129,46 +132,18 @@ export function App() {
     },
   ];
 
-  const groupedCotizaciones = cotizaciones.reduce((acc, cotizacion) => {
+  // Ajustamos la definición de groupedCotizaciones
+  const groupedCotizaciones = cotizaciones.reduce<Record<string, CotizacionItem[]>>((acc, cotizacion) => {
     if (!acc[cotizacion.aseguradora]) {
       acc[cotizacion.aseguradora] = [];
     }
     acc[cotizacion.aseguradora].push(cotizacion);
     return acc;
-  }, {} as Record<string, Array<{ aseguradora: string; precio: number; cobertura: string }>>);
+  }, {});
 
-  interface Subtipo {
-    cobertura_cia_id: number;
-    cobertura_cia_code: string;
-    premio: string;
-    descripcion_cobertura: string;
-  }
 
-  interface Cobertura {
-    tipo_cobertura: string;
-    subtipos: Subtipo[];
-  }
 
-  interface Cotizacion {
-    cia: string;
-    codigo_cia: string;
-    suma_asegurada: number;
-    coberturas: Cobertura[];
-  }
 
-  interface CompanyData {
-    cotizacion_id: number;
-    cotizaciones: Cotizacion[];
-  }
-
-  type ApiResponse = Record<string, CompanyData>;
-
-  interface CotizacionItem {
-    aseguradora: string;
-    precio: number;
-    cobertura: string;
-    sumaAsegurada: number;
-  }
 
   return (
     <div className={`min-h-screen ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}>
