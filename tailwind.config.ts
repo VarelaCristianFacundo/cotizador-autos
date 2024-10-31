@@ -12,7 +12,7 @@ const config: Config = {
       colors: {
         // Colores personalizados del logo
         logo: {
-          blue1: '#3d4575', // Color principal del logo
+          blue1: '#275db3', // Color principal del logo
           blue2: '#262e66', // Segundo tono del logo
           blue3: '#5c70ae', // Tercero tono del logo
           blue4: '#31396d', // Cuarto tono del logo

@@ -383,7 +383,7 @@ export function App() {
                       onClick={() =>
                         setExpandedCard(expandedCard === index ? null : index)
                       }
-                      className="transition-all bg-logo-blue1 hover:bg-logo-blue2 text-white"
+                      className="transition-all bg-logo-blue1 hover:bg-logo-blue2 text-white hover:text-white"
                     >
                       {expandedCard === index ? "Mostrar menos" : "Ver más"}
                     </Button>
@@ -459,7 +459,7 @@ export function App() {
       </footer>
 
       <Button
-        className="fixed bottom-4 right-4 rounded-full w-16 h-16 bg-logo-blue1 hover:bg-logo-blue2 flex items-center justify-center"
+        className="fixed bottom-4 right-4 rounded-full w-16 h-16 bg-logo-blue2 hover:bg-logo-blue4 flex items-center justify-center"
         onClick={() => window.open("https://wa.me/+5491133598514", "_blank")}
       >
         <FaWhatsapp className="w-8 h-8 text-white" />
