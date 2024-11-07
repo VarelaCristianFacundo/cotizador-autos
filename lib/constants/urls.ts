@@ -1,5 +1,5 @@
 // lib/constants/urls.ts
 export const API_BASE_URL = process.env.API || ''
-export const API_LOGIN = 'http://127.0.0.1:8000/auth'
-export const API_BRANDS = 'http://127.0.0.1:8000/brands'
-export const API_QUOTE = 'http://127.0.0.1:8000/quote'
+export const API_LOGIN = `${process.env.NEXT_PUBLIC_API_URL}/auth`
+export const API_BRANDS = `${process.env.NEXT_PUBLIC_API_URL}/brands`
+export const API_QUOTE = `${process.env.NEXT_PUBLIC_API_URL}/quote`

@@ -1,6 +1,6 @@
 export const fetchBrands = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/brands')
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/brands`)
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`)
     }
