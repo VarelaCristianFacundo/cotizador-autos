@@ -99,12 +99,12 @@ export function App() {
 
   const cardData = [
     {
-      title: "Ventajas de contratar un seguro para autos con ClickSeguros",
+      title: "Ventajas de contratar un seguro para autos con REDPAS",
       icon: <Car className="w-12 h-12 text-logo-blue1" />,
       summary:
         "Gana tranquilidad, seguridad y confianza con nuestro servicio de seguros para autos.",
       fullText:
-        "Contratando un seguro para autos con ClickSeguros estarás ganando tranquilidad, seguridad y confianza. Una de las principales ventajas de nuestra plataforma es la facilidad y rapidez para comparar las distintas coberturas y costos de seguros para autos que ofrecen las aseguradoras más prestigiosas del país. Cada propuesta contempla la mejor opción para cada uno de nuestros clientes. Podrás asegurar tu auto en el día con nuestras soluciones digitales.",
+        "Contratando un seguro para autos con REDPAS estarás ganando tranquilidad, seguridad y confianza. Una de las principales ventajas de nuestra plataforma es la facilidad y rapidez para comparar las distintas coberturas y costos de seguros para autos que ofrecen las aseguradoras más prestigiosas del país. Cada propuesta contempla la mejor opción para cada uno de nuestros clientes. Podrás asegurar tu auto en el día con nuestras soluciones digitales.",
     },
     {
       title: "Estés donde estés, cotizá a un clic",
@@ -128,7 +128,7 @@ export function App() {
       summary:
         "Conoce los factores que influyen en la cotización de tu seguro de auto.",
       fullText:
-        "Al momento de planificar el presupuesto y conocer el costo del seguro para tu auto, es fundamental saber que cada vehículo tendrá una cotización diferente según la marca, el modelo, el año, la ubicación de riesgo, entre otras variables del auto. El cotizador de ClickSeguros te ayudará a elegir el tipo de cobertura más conveniente para vos.",
+        "Al momento de planificar el presupuesto y conocer el costo del seguro para tu auto, es fundamental saber que cada vehículo tendrá una cotización diferente según la marca, el modelo, el año, la ubicación de riesgo, entre otras variables del auto. El cotizador de REDPAS te ayudará a elegir el tipo de cobertura más conveniente para vos.",
     },
   ];
 
@@ -177,7 +177,7 @@ export function App() {
       <main className="pt-20">
         <section
           className="bg-cover bg-center py-28"
-          style={{ backgroundImage: `url('/images/auto1.png')` }}
+          style={{ backgroundImage: `url('/images/auto.png')` }}
         >
           <div className="max-w-3xl mx-auto px-4 sm:px-28 lg:px-32">
             <h1 className="text-3xl font-bold text-center mb-8 text-logo-blue1">
@@ -396,67 +396,39 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-logo-blue1 text-white py-8">
+      <footer className="bg-logo-blue1 text-white py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            {/* Sección Nosotros */}
             <div>
               <h3 className="text-lg font-semibold mb-4 underline">Nosotros</h3>
-              <ul className="space-y-2">
+              <ul className="space-y-4">
                 <li>
-                  <a href="#" className="hover:underline">
-                    Nosotros
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Política de Privacidad
-                  </a>
+                  <p className="text-sm leading-relaxed">
+                    SegurosyServicios es una empresa de RedPas, Red de Productores y Organizadores de Seguros. Operamos en todo el país, lo que significa que siempre tendrás un productor matriculado cerca de ti. Trabajamos con compañías líderes, asegurando competitividad y excelencia en nuestros servicios.
+                  </p>
                 </li>
               </ul>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4 underline">Clientes</h3>
-              <ul className="space-y-2" id="contacto">
-                <li>
-                  <a href="#" className="hover:underline">
-                    Contacto
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:underline">
-                    Preguntas Frecuentes
-                  </a>
-                </li>
-              </ul>
-            </div>
+
+            {/* Sección Contacto */}
             <div>
               <h3 className="text-lg font-semibold mb-4 underline">Contacto</h3>
-              <p>Cotizá tu auto</p>
-              <p>Av. Bartolomé Mitre 1249 P.B. (B1604AKE),</p>
-              <p>Florida Oeste, Buenos Aires, Argentina.</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4 underline">
-                Socio Fundador
-              </h3>
+              <p>CASA CENTRAL: Rodriguez Peña 375 5 A - CABA</p>
+              <p>Miguel Garcia, Matricula SSN 56757 - Tel: 1141926851</p>
+              <p>Matias Padin, Matricula SSN 66985 - Tel: 1133598514</p>
+              <p>Email: <a href="mailto:info@segurosyservicios.com.ar" className="underline hover:text-gray-300">info@segurosyservicios.com.ar</a> - <a href="mailto:info@redpas.com.ar" className="underline hover:text-gray-300">info@redpas.com.ar</a></p>
             </div>
           </div>
-          <div className="mt-8 text-center text-sm">
-            <p>
-              Mazzulla y Padin desempeña las funciones de una sociedad de
-              productores asesores de seguros conforme surge de la Ley 22.400,
-              no revistiendo el carácter de compañía de seguros y se encuentra
-              registrada con Matrícula 1174, expedida por la Superintendencia de
-              Seguros de la Nación.
-            </p>
+
+          {/* Divider and Copyright */}
+          <div className="border-t border-white mt-8 pt-8 text-center">
+            <p className="text-xs text-white">© {new Date().getFullYear()} SegurosyServicios. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
+
 
       <Button
         className="fixed bottom-4 right-4 rounded-full w-16 h-16 bg-logo-blue2 hover:bg-logo-blue4 flex items-center justify-center"
