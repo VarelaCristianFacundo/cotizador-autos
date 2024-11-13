@@ -11,6 +11,7 @@ type SelectProps = {
   selectedValue: string;
   setSelectedValue: React.Dispatch<React.SetStateAction<string>>;
   className?: string;
+  setError: React.Dispatch<React.SetStateAction<boolean>>; // Nueva prop para manejar el error
 };
 
 const SelectComponent: React.FC<SelectProps> = ({
@@ -18,10 +19,10 @@ const SelectComponent: React.FC<SelectProps> = ({
   selectedValue,
   setSelectedValue,
   className,
+  setError,
 }) => {
   const [options, setOptions] = useState<Option[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,16 +30,16 @@ const SelectComponent: React.FC<SelectProps> = ({
       try {
         const data = await fetchBrands();
         setOptions(data);
-        setError(null);
+        setError(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
+        console.log(err)
+        setError(true); // Maneja el error en el estado del componente padre
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, []);
+  }, [setError]);
 
   return (
     <div className={className}>
@@ -50,18 +51,14 @@ const SelectComponent: React.FC<SelectProps> = ({
         className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
         value={selectedValue}
         onChange={(e) => setSelectedValue(e.target.value)}
-        disabled={loading || error !== null}
+        disabled={loading || options.length === 0}
       >
         <option value="">{loading ? "Cargando..." : `Seleccionar ${label}`}</option>
-        {error ? (
-          <option value="" disabled>{`Error: ${error}`}</option>
-        ) : (
-          options.map((option) => (
-            <option key={option.brand_id} value={option.brand}>
-              {option.brand}
-            </option>
-          ))
-        )}
+        {options.map((option) => (
+          <option key={option.brand_id} value={option.brand}>
+            {option.brand}
+          </option>
+        ))}
       </select>
     </div>
   );

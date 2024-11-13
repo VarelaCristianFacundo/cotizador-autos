@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { fetchLocationsByProvince, fetchProvinces } from "@/services/locations"; // Importar servicios
+import { fetchLocationsByProvince, fetchProvinces } from "@/services/locations";
 import { fetchQuote } from "@/services/quote";
-import {
-  ApiResponse,
-  Localidad
-} from '@/utils/types';
+import { ApiResponse, Localidad } from '@/utils/types';
 import React, { useEffect, useState } from "react";
 
 interface Province { id: string; nombre: string; }
@@ -16,7 +13,6 @@ interface DataModalProps {
   modelId: string;
 }
 
-
 export const DataModal: React.FC<DataModalProps> = ({
   onSuccess,
   onClose,
@@ -24,21 +20,21 @@ export const DataModal: React.FC<DataModalProps> = ({
   modelId,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [dni, setDni] = useState("");
-  const [fechaNacimiento, setFechaNacimiento] = useState("");
-  const [codigoPostal, setCodigoPostal] = useState("");
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [selectedProvince, setSelectedProvince] = useState("");
-  const [locations, setLocations] = useState<Localidad[]>([]);
+  const [locations, setLocations] = useState<Localidad[]>([]); // Array que controla el estado del select de localidad
   const [selectedLocation, setSelectedLocation] = useState("");
+  const [codigoPostal, setCodigoPostal] = useState(""); // Solo mantiene el código postal asociado a la localidad seleccionada
+
+  // Constantes de datos fijos
+  const dni = "12345678";
+  const fechaNacimiento = "1990-01-01";
 
   useEffect(() => {
-    // Obtener todas las provincias únicas
     const getProvinces = async () => {
       try {
         const data = await fetchProvinces();
         if (data && Array.isArray(data)) {
-          // Crear un set de provincias únicas basadas en nombreProvincia
           const uniqueProvinces = Array.from(
             new Set(data.map((item) => item.nombreProvincia))
           ).map((provincia) => {
@@ -61,14 +57,15 @@ export const DataModal: React.FC<DataModalProps> = ({
     getProvinces();
   }, []);
 
-
   const handleProvinceChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const provinceId = e.target.value;
     setSelectedProvince(provinceId);
 
-    // Obtener localidades por ID de provincia
+    // Deshabilita el select de localidad mientras se realiza la solicitud de datos
+    setLocations([]);
+
     const locationsData = await fetchLocationsByProvince(provinceId);
-    setLocations(locationsData.location);
+    setLocations(locationsData.location); // Habilita el select de localidad cuando locations tiene datos
   };
 
   const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -77,11 +74,9 @@ export const DataModal: React.FC<DataModalProps> = ({
 
     if (location) {
       setSelectedLocation(locationId);
-      setCodigoPostal(location.codigo_postal); // Ahora TypeScript reconoce codigo_postal
+      setCodigoPostal(location.codigo_postal); // Guardar el código postal de la localidad seleccionada
     }
   };
-
-
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -89,25 +84,25 @@ export const DataModal: React.FC<DataModalProps> = ({
 
     try {
       const quoteData = {
-        id_modelo: modelId,             // ID del modelo seleccionado por el usuario
-        anio: ano,                      // Año seleccionado por el usuario
-        tipo_vehiculo: "1",             // Tipo de vehículo (hardcodeado en "1")
-        tipo_uso: "1",                  // Tipo de uso (hardcodeado en "1")
-        es_0_km: "1",                   // 0 Km (hardcodeado en "1")
-        location_id: selectedLocation,  // ID de la localidad seleccionada
+        id_modelo: modelId,
+        anio: ano,
+        tipo_vehiculo: "1",
+        tipo_uso: "1",
+        es_0_km: "1",
+        location_id: selectedLocation,
         location_nombre: locations.find((loc) => loc.id === parseInt(selectedLocation))?.nombre || "",
-        is_moto: "0",                   // Hardcodeado como "0"
-        provincia: selectedProvince,    // Provincia seleccionada
-        codigo_postal: codigoPostal,    // Código postal autocompletado
+        is_moto: "0",
+        provincia: selectedProvince,
 
-        // Campos adicionales requeridos
-        tipo_doc: "DNI",                // Tipo de documento (hardcodeado como "DNI")
-        cliente_dni: dni,               // DNI ingresado por el usuario
-        fecha_nacimiento: fechaNacimiento, // Fecha de nacimiento ingresada por el usuario
+        // Campos adicionales requeridos en el backend
+        tipo_doc: "DNI",
+        cliente_dni: dni,
+        fecha_nacimiento: fechaNacimiento,
+        codigo_postal: codigoPostal,
       };
 
       const quoteResponse = await fetchQuote(quoteData);
-      onSuccess(quoteResponse); // Ahora pasa los datos con el tipo correcto
+      onSuccess(quoteResponse);
       setLoading(false);
       onClose();
     } catch (error) {
@@ -116,40 +111,16 @@ export const DataModal: React.FC<DataModalProps> = ({
     }
   };
 
-
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <h1 className="text-lg font-semibold">Completa los datos para cotizar</h1>
 
-        <div className="mt-4">
-          <label>DNI:</label>
-          <input
-            type="text"
-            value={dni}
-            onChange={(e) => setDni(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
-        </div>
-
-        <div className="mt-4">
-          <label>Fecha de Nacimiento:</label>
-          <input
-            type="date"
-            value={fechaNacimiento}
-            onChange={(e) => setFechaNacimiento(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
-        </div>
-
-        <div className="mt-4">
+        <div>
           <label>Provincia:</label>
           <select
             value={selectedProvince}
             onChange={handleProvinceChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
+            className="w-full p-2 mt-2 border border-gray-300 rounded-lg"
             required
           >
             <option value="">Selecciona una provincia</option>
@@ -162,31 +133,21 @@ export const DataModal: React.FC<DataModalProps> = ({
         </div>
 
         <div className="mt-4">
-          <label>Localidad:</label>
+          <label>Localidad (con Código Postal):</label>
           <select
             value={selectedLocation}
             onChange={handleLocationChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
+            className="w-full p-2 mt-2 border border-gray-300 rounded-lg"
             required
+            disabled={locations.length === 0} // Habilita el select solo cuando locations tiene datos
           >
             <option value="">Selecciona una localidad</option>
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
-                {location.nombre}
+                {location.nombre} - CP: {location.codigo_postal}
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="mt-4">
-          <label>Código Postal:</label>
-          <input
-            type="text"
-            value={codigoPostal}
-            readOnly // Agrega readOnly aquí
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
         </div>
 
         <Button type="submit" className="w-full mt-4" disabled={loading}>

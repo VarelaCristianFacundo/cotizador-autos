@@ -19,7 +19,7 @@ import {
   CotizacionItem
 } from '@/utils/types';
 import { motion } from "framer-motion";
-import { Car, HelpCircle, Moon, MousePointerClick, Scale, Sun } from "lucide-react";
+import { AlertOctagon, Car, HelpCircle, Mail, Moon, MousePointerClick, Scale, Sun } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { FaWhatsapp } from "react-icons/fa";
@@ -35,6 +35,7 @@ export function App() {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [cotizaciones, setCotizaciones] = useState<CotizacionItem[]>([]);
+  const [apiError, setApiError] = useState(false); // Estado de error
 
   const [selectedMarca, setSelectedMarca] = useState("");
   const [selectedAno, setSelectedAno] = useState("");
@@ -183,78 +184,106 @@ export function App() {
             <h1 className="text-3xl font-bold text-center mb-8 text-logo-blue1">
               Seguros para Autos
             </h1>
-            <form
-              onSubmit={handleQuoteSubmit}
-              className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-            >
-              <div className="grid grid-cols-1 gap-4">
-                {/* Select Marca */}
-                <SelectComponent
-                  label="Marca"
-                  selectedValue={selectedMarca}
-                  setSelectedValue={setSelectedMarca}
-                />
 
-                {/* Select Año */}
-                <div className="space-y-2">
-                  <label htmlFor="ano" className="text-gray-700">
-                    Año
-                  </label>
-                  <select
-                    id="ano"
-                    className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
-                    value={selectedAno}
-                    onChange={(e) => setSelectedAno(e.target.value)}
+            {/* Si hay un error en la API, mostrar vista de error */}
+            {apiError ? (
+              <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 text-center">
+                <AlertOctagon className="w-24 h-24 mx-auto text-red-600 mb-4" />
+                <h2 className="text-xl font-semibold text-red-600 mb-4">¡Ups! Algo salió mal</h2>
+                <p className="text-gray-700 mb-6">
+                  En este momento no podemos cargar la información de las aseguradoras
+                  debido a un problema técnico. Puedes contactarnos directamente por
+                  WhatsApp o correo electrónico para obtener asistencia.
+                </p>
+                <div className="flex justify-center gap-4 mt-4">
+                  <Button
+                    className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2 px-4 py-2 rounded"
+                    onClick={() => window.open("https://wa.me/+5491133598514", "_blank")}
                   >
-                    <option value="">Seleccionar Año</option>
-                    <option value="2023">2023</option>
-                    <option value="2022">2022</option>
-                    <option value="2021">2021</option>
-                    <option value="2020">2020</option>
-                    <option value="2019">2019</option>
-                    <option value="2018">2018</option>
-                    <option value="2017">2017</option>
-                    <option value="2016">2016</option>
-                    <option value="2015">2015</option>
-                    <option value="2014">2014</option>
-                    <option value="2013">2013</option>
-                    <option value="2012">2012</option>
-                    <option value="2011">2011</option>
-                    <option value="2010">2010</option>
-                    <option value="2009">2009</option>
-                    <option value="2008">2008</option>
-                    <option value="2007">2007</option>
-                    <option value="2006">2006</option>
-                    <option value="2005">2005</option>
-                    <option value="2004">2004</option>
-                    <option value="2003">2003</option>
-                    <option value="2002">2002</option>
-                    <option value="2001">2001</option>
-                    <option value="2000">2000</option>
-                  </select>
+                    <FaWhatsapp className="w-5 h-5" /> WhatsApp
+                  </Button>
+                  <Button
+                    className="bg-logo-blue1 hover:bg-logo-blue2 text-white flex items-center gap-2 px-4 py-2 rounded"
+                    onClick={() => window.location.href = "mailto:info@segurosyservicios.com.ar"}
+                  >
+                    <Mail className="w-5 h-5" /> Contacto por Email
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              // Formulario normal de cotización si no hay errores de API
+              <form
+                onSubmit={handleQuoteSubmit}
+                className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+              >
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Select Marca con manejo de error */}
+                  <SelectComponent
+                    label="Marca"
+                    selectedValue={selectedMarca}
+                    setSelectedValue={setSelectedMarca}
+                    setError={setApiError} // Pasar el setError para manejar errores de API
+                  />
+
+                  {/* Select Año */}
+                  <div className="space-y-2">
+                    <label htmlFor="ano" className="text-gray-700">
+                      Año
+                    </label>
+                    <select
+                      id="ano"
+                      className="block w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:text-logo-blue2"
+                      value={selectedAno}
+                      onChange={(e) => setSelectedAno(e.target.value)}
+                    >
+                      <option value="">Seleccionar Año</option>
+                      <option value="2023">2023</option>
+                      <option value="2022">2022</option>
+                      <option value="2021">2021</option>
+                      <option value="2020">2020</option>
+                      <option value="2019">2019</option>
+                      <option value="2018">2018</option>
+                      <option value="2017">2017</option>
+                      <option value="2016">2016</option>
+                      <option value="2015">2015</option>
+                      <option value="2014">2014</option>
+                      <option value="2013">2013</option>
+                      <option value="2012">2012</option>
+                      <option value="2011">2011</option>
+                      <option value="2010">2010</option>
+                      <option value="2009">2009</option>
+                      <option value="2008">2008</option>
+                      <option value="2007">2007</option>
+                      <option value="2006">2006</option>
+                      <option value="2005">2005</option>
+                      <option value="2004">2004</option>
+                      <option value="2003">2003</option>
+                      <option value="2002">2002</option>
+                      <option value="2001">2001</option>
+                      <option value="2000">2000</option>
+                    </select>
+                  </div>
+
+                  {/* Select Modelo */}
+                  <AutocompleteComponent
+                    anio={selectedAno}
+                    marca={selectedMarca}
+                    selectedModelo={selectedModelo}
+                    setSelectedModelo={setSelectedModelo}
+                    setSelectedModeloId={setSelectedModeloId}
+                  />
                 </div>
 
-                {/* Select Modelo */}
-                <AutocompleteComponent
-                  anio={selectedAno}
-                  marca={selectedMarca}
-                  selectedModelo={selectedModelo}
-                  setSelectedModelo={setSelectedModelo}
-                  setSelectedModeloId={setSelectedModeloId} // Capturar el ID del modelo
-                />
-
-              </div>
-
-              {/* Botón de Cotizar */}
-              <Button
-                type="submit"
-                className={`w-full mt-6 ${isFormComplete ? "bg-logo-blue1" : "bg-gray-300"
-                  }`}
-                disabled={!isFormComplete}
-              >
-                Cotizar
-              </Button>
-            </form>
+                {/* Botón de Cotizar */}
+                <Button
+                  type="submit"
+                  className={`w-full mt-6 ${isFormComplete ? "bg-logo-blue1" : "bg-gray-300"}`}
+                  disabled={!isFormComplete}
+                >
+                  Cotizar
+                </Button>
+              </form>
+            )}
           </div>
         </section>
 
@@ -293,7 +322,7 @@ export function App() {
                     <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Suma asegurada: ${cotizaciones[0]?.sumaAsegurada || 'N/A'}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-8">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
                   {cotizaciones.map((cotizacion, index) => (
                     <Card key={index} className={`shadow-md bg-${darkMode ? 'gray-800' : 'white'} text-${darkMode ? 'white' : 'black'}`}>
                       <CardHeader>
