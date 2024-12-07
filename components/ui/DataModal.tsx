@@ -5,7 +5,7 @@ import { fetchProvinces } from "@/services/locations";
 import { fetchQuote } from "@/services/quote";
 import { ApiResponse, Localidad } from '@/utils/types';
 import React, { useEffect, useState } from "react";
-import AutocompleteLocalidadComponent from './AutocompleteLocalidadComponent'; // Asegúrate de importar el nuevo componente
+import AutocompleteLocalidadComponent from './AutocompleteLocalidadComponent';
 
 interface Province { id: string; nombre: string; }
 
@@ -27,15 +27,18 @@ export const DataModal: React.FC<DataModalProps> = ({
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedLocalidad, setSelectedLocalidad] = useState<Localidad | null>(null);
 
+  // Nuevos campos
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
+
   const dni = "12345678";
   const fechaNacimiento = "1990-01-01";
 
-  // Utility to mask display names based on province values
+  // Función para mostrar el nombre de la provincia (si necesitas mapear nombres)
   const getDisplayName = (name: string, type: "province") => {
-    if (type === "province") {
-      if (name === "CAPITAL") return "BUENOS AIRES";
-      if (name === "BUENOS AIRES") return "CAPITAL FEDERAL";
-    }
+    console.log(type);
+    // Ajusta esta lógica si es necesario
     return name;
   };
 
@@ -43,17 +46,12 @@ export const DataModal: React.FC<DataModalProps> = ({
     const getProvinces = async () => {
       try {
         const data = await fetchProvinces();
-        if (data && Array.isArray(data)) {
-          const uniqueProvinces = Array.from(
-            new Set(data.map((item) => item.nombreProvincia))
-          ).map((provincia) => {
-            const provinciaItem = data.find(
-              (item) => item.nombreProvincia === provincia
-            );
-            return { id: provinciaItem?.codigoProvincia, nombre: provincia };
-          });
-
-          setProvinces(uniqueProvinces);
+        if (data && Array.isArray(data.province)) {
+          const mappedProvinces = data.province.map((prov: { id: number, nombre: string }) => ({
+            id: prov.id.toString(),
+            nombre: prov.nombre
+          }));
+          setProvinces(mappedProvinces);
         } else {
           console.error("La respuesta no contiene provincias válidas");
           setProvinces([]);
@@ -65,12 +63,38 @@ export const DataModal: React.FC<DataModalProps> = ({
     };
     getProvinces();
   }, []);
+  
 
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const provinceId = e.target.value;
     setSelectedProvince(provinceId);
-    setSelectedLocalidad(null); // Resetear la localidad seleccionada
+    setSelectedLocalidad(null);
   };
+
+  // Mensajes de carga en el botón
+  const loadingMessages = [
+    "Estamos preparando su cotización...",
+    "Analizando ofertas de aseguradoras...",
+    "Buscando la mejor cobertura...",
+    "Calculando precios especiales...",
+    "Aguarde un momento, por favor..."
+  ];
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (loading) {
+      interval = setInterval(() => {
+        setLoadingMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
+      }, 1000);
+    } else {
+      setLoadingMessageIndex(0);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading, loadingMessages.length]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -97,6 +121,9 @@ export const DataModal: React.FC<DataModalProps> = ({
         cliente_dni: dni,
         fecha_nacimiento: fechaNacimiento,
         codigo_postal: selectedLocalidad.codigo_postal,
+        email: email,
+        nombre: nombre,
+        telefono: telefono
       };
 
       const quoteResponse = await fetchQuote(quoteData);
@@ -113,7 +140,47 @@ export const DataModal: React.FC<DataModalProps> = ({
     <div>
       <form onSubmit={handleSubmit}>
 
-        <div>
+        {/* Campo Nombre y Apellido */}
+        <div className="mb-4">
+          <label htmlFor="nombre" className="block mb-2">Nombre y Apellido:</label>
+          <input
+            id="nombre"
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+            required
+          />
+        </div>
+
+        {/* Campo Email */}
+        <div className="mb-4">
+          <label htmlFor="email" className="block mb-2">Email:</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+            required
+          />
+        </div>
+
+        {/* Campo Teléfono */}
+        <div className="mb-4">
+          <label htmlFor="telefono" className="block mb-2">Celular:</label>
+          <input
+            id="telefono"
+            type="tel"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+            required
+          />
+        </div>
+
+        {/* Selección de Provincia */}
+        <div className="mb-4">
           <label>Provincia:</label>
           <select
             value={selectedProvince}
@@ -130,14 +197,14 @@ export const DataModal: React.FC<DataModalProps> = ({
           </select>
         </div>
 
-        {/* Integrar el componente de autocompletado de Localidad */}
+        {/* Autocomplete de Localidad */}
         <AutocompleteLocalidadComponent
           selectedProvince={selectedProvince}
           setSelectedLocalidad={setSelectedLocalidad}
         />
 
         <Button type="submit" className="w-full mt-4" disabled={loading}>
-          {loading ? "Cotizando..." : "Cotizar"}
+          {loading ? loadingMessages[loadingMessageIndex] : "Cotizar"}
         </Button>
       </form>
     </div>

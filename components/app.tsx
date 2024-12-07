@@ -19,12 +19,14 @@ import {
   CotizacionItem
 } from '@/utils/types';
 import { motion } from "framer-motion";
-import { AlertOctagon, Car, HelpCircle, Mail, Moon, MousePointerClick, Scale, Sun } from "lucide-react";
+import { AlertOctagon, Car, ChevronDown, ChevronUp, HelpCircle, Mail, Moon, MousePointerClick, Scale, Sun } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Collapse } from "react-collapse";
 import { FaWhatsapp } from "react-icons/fa";
 import "swiper/css";
 import "swiper/css/autoplay";
+import 'swiper/css/free-mode';
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import AutocompleteComponent from "./ui/AutocompleteComponent";
@@ -36,14 +38,18 @@ export function App() {
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
   const [cotizaciones, setCotizaciones] = useState<CotizacionItem[]>([]);
   const [apiError, setApiError] = useState(false); // Estado de error
+  const [openCoverageTypes, setOpenCoverageTypes] = useState<{ [key: string]: boolean }>({});
+  const [hasScrolled, setHasScrolled] = useState(false);
 
   const [selectedMarca, setSelectedMarca] = useState("");
   const [selectedAno, setSelectedAno] = useState("");
   const [selectedModelo, setSelectedModelo] = useState("");
   const [selectedModeloId, setSelectedModeloId] = useState("");
-  const [selectedCoverage, setSelectedCoverage] = useState<string | null>(null);
+  const [selectedCoverage, setSelectedCoverage] = useState<CotizacionItem | null>(null);
   const [isCoverageModalOpen, setIsCoverageModalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [showFullDetalleCoberturaRC, setShowFullDetalleCoberturaRC] = useState(false);
+  const [showFullDetalleCoberturaCasco, setShowFullDetalleCoberturaCasco] = useState(false);
 
   const logos = [
     "allianz",
@@ -61,21 +67,30 @@ export function App() {
   };
   const handleSuccessData = (data: ApiResponse) => {
     const cotizacionesArray: CotizacionItem[] = [];
-
     Object.entries(data).forEach(([companyName, companyData]) => {
       if (companyData && Array.isArray(companyData.cotizaciones)) {
         companyData.cotizaciones.forEach((cotizacion) => {
           const sumaAsegurada = cotizacion.suma_asegurada || 0;
-
           if (Array.isArray(cotizacion.coberturas)) {
             cotizacion.coberturas.forEach((cobertura) => {
+              const tipoCobertura = cobertura.tipo_cobertura || 'N/A';
+
               if (Array.isArray(cobertura.subtipos)) {
                 cobertura.subtipos.forEach((subtipo) => {
+                  const rawData = subtipo.raw_data;
                   cotizacionesArray.push({
                     aseguradora: companyName.toUpperCase(),
                     precio: parseFloat(subtipo.premio) || 0,
                     cobertura: subtipo.descripcion_cobertura || 'Descripción no disponible',
                     sumaAsegurada,
+                    tipoCobertura,
+                    descripcionComercial: rawData.descripcionComercial || '',
+                    detalleCoberturaRC: rawData.detalleCoberturaRC || '',
+                    detalleCoberturaCasco: rawData.detalleCoberturaCasco || '',
+                    franquicia: rawData.franquicia?.toString() || '',
+                    auxilioMecanico: rawData.auxilioMecanico || '',
+                    paisesLimitrofes: rawData.paisesLimitrofes || '',
+                    itemsCobertura: subtipo.items_cobertura || [],
                   });
                 });
               }
@@ -85,15 +100,15 @@ export function App() {
       }
     });
 
-    // Actualiza el estado con las cotizaciones procesadas
     setCotizaciones(cotizacionesArray);
     setIsEmailDialogOpen(false);
   };
 
-  const openCoverageModal = (cobertura: string) => {
-    setSelectedCoverage(cobertura);
+  const openCoverageModal = (cotizacion: CotizacionItem) => {
+    setSelectedCoverage(cotizacion);
     setIsCoverageModalOpen(true);
   };
+
 
   const isFormComplete =
     selectedMarca && selectedAno && selectedModelo;
@@ -133,17 +148,53 @@ export function App() {
     },
   ];
 
-  // Ajustamos la definición de groupedCotizaciones
   const groupedCotizaciones = cotizaciones.reduce<Record<string, CotizacionItem[]>>((acc, cotizacion) => {
-    if (!acc[cotizacion.aseguradora]) {
-      acc[cotizacion.aseguradora] = [];
+    if (!acc[cotizacion.tipoCobertura]) {
+      acc[cotizacion.tipoCobertura] = [];
     }
-    acc[cotizacion.aseguradora].push(cotizacion);
+    acc[cotizacion.tipoCobertura].push(cotizacion);
     return acc;
   }, {});
 
 
+  const toggleCoverageType = (tipoCobertura: string) => {
+    setOpenCoverageTypes(prevState => ({
+      ...prevState,
+      [tipoCobertura]: !prevState[tipoCobertura],
+    }));
+  };
 
+  useEffect(() => {
+    if (!isEmailDialogOpen && cotizaciones.length > 0 && !hasScrolled) {
+      const coverageKeys = Object.keys(groupedCotizaciones);
+      if (coverageKeys.length > 0) {
+        const firstKey = coverageKeys[0];
+        setOpenCoverageTypes(prev => ({ ...prev, [firstKey]: true }));
+        const element = document.getElementById('coverage-section');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+        setHasScrolled(true);
+      }
+    }
+  }, [isEmailDialogOpen, cotizaciones, groupedCotizaciones, hasScrolled]);
+
+  // Generar años dinámicos + 0KM
+  const currentYear = new Date().getFullYear();
+  const years = ["0KM"];
+  for (let y = currentYear; y >= 2000; y--) {
+    years.push(String(y));
+  }
+
+  // Función para formatear precio
+  const formatPrecio = (num: number) => {
+    return num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // Función para formatear suma asegurada sin decimales
+  const formatSumaAsegurada = (num: number) => {
+    return num.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+  };
 
 
   return (
@@ -237,30 +288,9 @@ export function App() {
                       onChange={(e) => setSelectedAno(e.target.value)}
                     >
                       <option value="">Seleccionar Año</option>
-                      <option value="2023">2023</option>
-                      <option value="2022">2022</option>
-                      <option value="2021">2021</option>
-                      <option value="2020">2020</option>
-                      <option value="2019">2019</option>
-                      <option value="2018">2018</option>
-                      <option value="2017">2017</option>
-                      <option value="2016">2016</option>
-                      <option value="2015">2015</option>
-                      <option value="2014">2014</option>
-                      <option value="2013">2013</option>
-                      <option value="2012">2012</option>
-                      <option value="2011">2011</option>
-                      <option value="2010">2010</option>
-                      <option value="2009">2009</option>
-                      <option value="2008">2008</option>
-                      <option value="2007">2007</option>
-                      <option value="2006">2006</option>
-                      <option value="2005">2005</option>
-                      <option value="2004">2004</option>
-                      <option value="2003">2003</option>
-                      <option value="2002">2002</option>
-                      <option value="2001">2001</option>
-                      <option value="2000">2000</option>
+                      {years.map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -277,6 +307,7 @@ export function App() {
                 {/* Botón de Cotizar */}
                 <Button
                   type="submit"
+                  id="coverage-section"
                   className={`w-full mt-6 ${isFormComplete ? "bg-logo-blue1" : "bg-gray-300"}`}
                   disabled={!isFormComplete}
                 >
@@ -293,6 +324,8 @@ export function App() {
             <DialogHeader>
               <DialogTitle>Datos adicionales para cotización</DialogTitle>
             </DialogHeader>
+            {/* Aquí, en DataModal, cuando envíes el quoteData, revisa es_0_km */}
+            {/* es_0_km: selectedAno === "0KM" ? "1" : "0" */}
             <DataModal
               onSuccess={handleSuccessData}
               onClose={() => setIsEmailDialogOpen(false)}
@@ -302,46 +335,73 @@ export function App() {
           </DialogContent>
         </Dialog>
 
-        {/* Mostrar cotizaciones agrupadas por aseguradora */}
-        <div className="py-8 ${darkMode ? 'bg-gray-800' : 'bg-white'}">
+        <div className={`py-8`}>
           <div className="w-full px-4 sm:px-6 lg:px-8">
-            {Object.entries(groupedCotizaciones).map(([aseguradora, cotizaciones]) => (
-              <div key={aseguradora} className="bg-${darkMode ? 'gray-700' : 'white'} shadow-lg mb-6 p-4 rounded-lg">
-                <div className="flex items-center space-x-4 mb-4">
-                  <Image
-                    src={`/images/${aseguradora.toLowerCase()}.png`}
-                    alt={`${aseguradora} logo`}
-                    width={80}
-                    height={40}
-                    className="h-12 w-auto object-contain"
-                  />
-                  <div>
-                    <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-600'}`}>
-                      {aseguradora === 'fedpat' ? 'Federación Patronal' : aseguradora === 'mercantil' ? 'Mercantil Andina' : aseguradora.charAt(0).toUpperCase() + aseguradora.slice(1)}
-                    </h3>
-                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Suma asegurada: ${cotizaciones[0]?.sumaAsegurada || 'N/A'}</p>
-                  </div>
+            {Object.entries(groupedCotizaciones).map(([tipoCobertura, cotizaciones]) => {
+              const coberturaDescripcion = cotizaciones.length > 0 ? cotizaciones[0].cobertura : '';
+              return (
+                <div key={tipoCobertura} className="mb-6">
+                  <button
+                    onClick={() => toggleCoverageType(tipoCobertura)}
+                    className="flex items-center justify-between w-full p-4 bg-gray-200 dark:bg-gray-700 rounded-lg"
+                  >
+                    <span className="text-lg font-semibold">
+                      {tipoCobertura} - {coberturaDescripcion} <span className="text-sm">({cotizaciones.length})</span>
+                    </span>
+                    {openCoverageTypes[tipoCobertura] ? (
+                      <ChevronUp className="w-6 h-6" />
+                    ) : (
+                      <ChevronDown className="w-6 h-6" />
+                    )}
+                  </button>
+                  <Collapse isOpened={openCoverageTypes[tipoCobertura]}>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-4">
+                      {cotizaciones.map((cotizacion, index) => {
+                        const formattedSuma = formatSumaAsegurada(cotizacion.sumaAsegurada);
+                        const formattedPrecio = formatPrecio(cotizacion.precio);
+
+                        return (
+                          <Card key={index} className={`shadow-md bg-${darkMode ? 'gray-800' : 'white'} text-${darkMode ? 'white' : 'black'}`}>
+                            <CardHeader className="flex items-center p-2 flex-col justify-center m-0">
+                              <Image
+                                src={`/images/${cotizacion.aseguradora.toLowerCase()}.png`}
+                                alt={`${cotizacion.aseguradora} logo`}
+                                width={80}
+                                height={40}
+                                className="h-12 w-auto object-contain"
+                              />
+                              <div className="text-center">
+                                <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                                  Suma asegurada: ${formattedSuma}
+                                </h3>
+                                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  {cotizacion.aseguradora}
+                                </p>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="flex p-4 flex-col justify-center m-0">
+                              <div className="text-center mb-4">
+                                <p className="text-md font-semibold">Precio: ${formattedPrecio}</p>
+                              </div>
+                            </CardContent>
+                            <CardFooter className="flex flex-col items-center">
+                              <Button
+                                variant="outline"
+                                onClick={() => openCoverageModal(cotizacion)}
+                                className="mb-2 w-full"
+                              >
+                                Ver detalle
+                              </Button>
+                            </CardFooter>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </Collapse>
                 </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-                  {cotizaciones.map((cotizacion, index) => (
-                    <Card key={index} className={`shadow-md bg-${darkMode ? 'gray-800' : 'white'} text-${darkMode ? 'white' : 'black'}`}>
-                      <CardHeader>
-                        <CardTitle>Precio: ${cotizacion.precio}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <Button
-                          variant="outline"
-                          onClick={() => openCoverageModal(cotizacion.cobertura)}
-                          className="mt-4"
-                        >
-                          Ver Cobertura
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
+
           </div>
 
           {/* Modal para mostrar la cobertura completa */}
@@ -349,13 +409,91 @@ export function App() {
             open={isCoverageModalOpen}
             onOpenChange={setIsCoverageModalOpen}
           >
-            <DialogContent>
+            <DialogContent className="max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Cobertura Detallada</DialogTitle>
+                <DialogTitle>Detalle de Cobertura</DialogTitle>
               </DialogHeader>
-              <div>
-                <p>{selectedCoverage}</p>
-              </div>
+              {selectedCoverage && (() => {
+                const formattedSuma = selectedCoverage.sumaAsegurada
+                  ? formatSumaAsegurada(selectedCoverage.sumaAsegurada)
+                  : null;
+                const formattedPrecio = formatPrecio(selectedCoverage.precio);
+
+                return (
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">
+                      {selectedCoverage.descripcionComercial || selectedCoverage.tipoCobertura}
+                    </h2>
+                    <p><strong>Aseguradora:</strong> {selectedCoverage.aseguradora}</p>
+                    <p><strong>Precio:</strong> ${formattedPrecio}</p>
+
+                    {formattedSuma && (
+                      <p><strong>Suma asegurada:</strong> ${formattedSuma}</p>
+                    )}
+                    {selectedCoverage.franquicia && (
+                      <p><strong>Franquicia:</strong> {selectedCoverage.franquicia}</p>
+                    )}
+                    {selectedCoverage.auxilioMecanico && (
+                      <p><strong>Auxilio Mecánico:</strong> {selectedCoverage.auxilioMecanico}</p>
+                    )}
+                    {selectedCoverage.paisesLimitrofes && (
+                      <p><strong>Cobertura en países limítrofes:</strong> {selectedCoverage.paisesLimitrofes}</p>
+                    )}
+
+                    {selectedCoverage.detalleCoberturaRC && (
+                      <>
+                        <p><strong>Detalle de Responsabilidad Civil:</strong></p>
+                        <p>
+                          {showFullDetalleCoberturaRC
+                            ? selectedCoverage.detalleCoberturaRC
+                            : `${selectedCoverage.detalleCoberturaRC.substring(0, 200)}...`}
+                        </p>
+                        {selectedCoverage.detalleCoberturaRC.length > 200 && (
+                          <Button
+                            variant="link"
+                            onClick={() => setShowFullDetalleCoberturaRC(!showFullDetalleCoberturaRC)}
+                          >
+                            {showFullDetalleCoberturaRC ? "Ver menos" : "Ver más"}
+                          </Button>
+                        )}
+                      </>
+                    )}
+
+                    {selectedCoverage.detalleCoberturaCasco && (
+                      <>
+                        <p><strong>Detalle de Cobertura:</strong></p>
+                        <p>
+                          {showFullDetalleCoberturaCasco
+                            ? selectedCoverage.detalleCoberturaCasco
+                            : `${selectedCoverage.detalleCoberturaCasco.substring(0, 200)}...`}
+                        </p>
+                        {selectedCoverage.detalleCoberturaCasco.length > 200 && (
+                          <Button
+                            variant="link"
+                            onClick={() => setShowFullDetalleCoberturaCasco(!showFullDetalleCoberturaCasco)}
+                          >
+                            {showFullDetalleCoberturaCasco ? "Ver menos" : "Ver más"}
+                          </Button>
+                        )}
+                      </>
+                    )}
+
+                    {selectedCoverage.itemsCobertura.length > 0 && (
+                      <div>
+                        <p><strong>Items de Cobertura:</strong></p>
+                        <ul className="list-disc list-inside">
+                          {selectedCoverage.itemsCobertura.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <Button className="w-full bg-logo-blue1 text-white">
+                      Contratar
+                    </Button>
+                  </div>
+                );
+              })()}
             </DialogContent>
           </Dialog>
         </div>
