@@ -26,7 +26,8 @@ const AutocompleteLocalidadComponent: React.FC<AutocompleteLocalidadProps> = ({
                 setLoading(true);
                 try {
                     const locationsData = await fetchLocationsByProvince(selectedProvince);
-                    setAllLocations(locationsData.location);
+                    // Asumiendo que locationsData ya es un array:
+                    setAllLocations(locationsData);
                     setError(null);
                 } catch (err) {
                     setError(
@@ -43,6 +44,7 @@ const AutocompleteLocalidadComponent: React.FC<AutocompleteLocalidadProps> = ({
             setInputValue('');
         }
     }, [selectedProvince]);
+
 
     useEffect(() => {
         if (inputValue.length >= 3 && !hasSelected && allLocations.length > 0) {
