@@ -5,6 +5,10 @@ type CarModelRequestBody = {
 }
 
 export const fetchModelsByBrandAndYear = async (data: CarModelRequestBody) => {
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    const { getLocalModels } = await import('./localData')
+    return { car: getLocalModels(data.marca, data.anio, data.modelo) }
+  }
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cars`, {
       method: 'POST',
@@ -19,9 +23,8 @@ export const fetchModelsByBrandAndYear = async (data: CarModelRequestBody) => {
     }
 
     return await response.json()
-  } catch (error) {
-    throw new Error(
-      error instanceof Error ? error.message : 'Error al obtener los modelos'
-    )
+  } catch {
+    const { getLocalModels } = await import('./localData')
+    return { car: getLocalModels(data.marca, data.anio, data.modelo) }
   }
 }

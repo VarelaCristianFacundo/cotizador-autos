@@ -1,16 +1,19 @@
 import { Localidad } from '@/utils/types'
 
 export const fetchProvinces = async () => {
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    const { getLocalProvinces } = await import('./localData')
+    return getLocalProvinces()
+  }
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/provinces`)
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`)
     }
     return await response.json()
-  } catch (error) {
-    throw new Error(
-      error instanceof Error ? error.message : 'Error fetching provinces'
-    )
+  } catch {
+    const { getLocalProvinces } = await import('./localData')
+    return getLocalProvinces()
   }
 }
 
@@ -21,6 +24,10 @@ export const fetchProvinces = async () => {
 export const fetchLocationsByProvince = async (
   provinceId: string
 ): Promise<Localidad[]> => {
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    const { getLocalLocations } = await import('./localData')
+    return getLocalLocations(provinceId)
+  }
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/locations/${provinceId}`
@@ -36,9 +43,8 @@ export const fetchLocationsByProvince = async (
       return data.location
     }
     return [] // Si no cumple ninguna de las dos, retornamos un arreglo vacío
-  } catch (error) {
-    throw new Error(
-      error instanceof Error ? error.message : 'Error fetching locations'
-    )
+  } catch {
+    const { getLocalLocations } = await import('./localData')
+    return getLocalLocations(provinceId)
   }
 }
