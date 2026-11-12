@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -14,8 +14,13 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "REDPAS - Cotizador",
-  description: "Cotizador de RedPas: genera y gestiona cotizaciones de manera rápida y eficiente."
+  title: "REDPAS · Compará seguros para tu auto",
+  description:
+    "Cotizá el seguro de tu auto y compará en un minuto las coberturas de las principales aseguradoras del país. Asesoramiento de productores matriculados.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0A1633",
 };
 
 export default function RootLayout({
@@ -24,10 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="es-AR">
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {children}
       </body>
     </html>
