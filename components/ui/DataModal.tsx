@@ -1,9 +1,9 @@
 // DataModal.tsx
 
-import { Button } from "@/components/ui/button";
 import { fetchProvinces } from "@/services/locations";
 import { fetchQuote } from "@/services/quote";
 import { ApiResponse, Localidad } from '@/utils/types';
+import { Loader2, Lock } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import AutocompleteLocalidadComponent from './AutocompleteLocalidadComponent';
 
@@ -16,6 +16,13 @@ interface DataModalProps {
   modelId: string;
 }
 
+const loadingMessages = [
+  "Preparando tu cotización…",
+  "Consultando aseguradoras…",
+  "Comparando coberturas…",
+  "Buscando el mejor precio…",
+];
+
 export const DataModal: React.FC<DataModalProps> = ({
   onSuccess,
   onClose,
@@ -26,34 +33,25 @@ export const DataModal: React.FC<DataModalProps> = ({
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedLocalidad, setSelectedLocalidad] = useState<Localidad | null>(null);
-
-  // Nuevos campos
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   const dni = "12345678";
   const fechaNacimiento = "1990-01-01";
-
-  // Función para mostrar el nombre de la provincia (si necesitas mapear nombres)
-  const getDisplayName = (name: string, type: "province") => {
-    console.log(type);
-    // Ajusta esta lógica si es necesario
-    return name;
-  };
 
   useEffect(() => {
     const getProvinces = async () => {
       try {
         const data = await fetchProvinces();
         if (data && Array.isArray(data.province)) {
-          const mappedProvinces = data.province.map((prov: { id: number, nombre: string }) => ({
+          setProvinces(data.province.map((prov: { id: number | string, nombre: string }) => ({
             id: prov.id.toString(),
             nombre: prov.nombre
-          }));
-          setProvinces(mappedProvinces);
+          })));
         } else {
-          console.error("La respuesta no contiene provincias válidas");
           setProvinces([]);
         }
       } catch (error) {
@@ -63,56 +61,34 @@ export const DataModal: React.FC<DataModalProps> = ({
     };
     getProvinces();
   }, []);
-  
-
-  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const provinceId = e.target.value;
-    setSelectedProvince(provinceId);
-    setSelectedLocalidad(null);
-  };
-
-  // Mensajes de carga en el botón
-  const loadingMessages = [
-    "Estamos preparando su cotización...",
-    "Analizando ofertas de aseguradoras...",
-    "Buscando la mejor cobertura...",
-    "Calculando precios especiales...",
-    "Aguarde un momento, por favor..."
-  ];
-  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (loading) {
-      interval = setInterval(() => {
-        setLoadingMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
-      }, 1000);
-    } else {
+    if (!loading) {
       setLoadingMessageIndex(0);
+      return;
     }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [loading, loadingMessages.length]);
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((i) => (i + 1) % loadingMessages.length);
+    }, 900);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!selectedLocalidad) {
+      setFormError("Elegí una localidad de la lista.");
+      return;
+    }
+    setFormError(null);
     setLoading(true);
 
     try {
-      if (!selectedLocalidad) {
-        alert('Por favor, selecciona una localidad');
-        setLoading(false);
-        return;
-      }
-
       const quoteData = {
         id_modelo: modelId,
         anio: ano,
         tipo_vehiculo: "1",
         tipo_uso: "1",
-        es_0_km: "1",
+        es_0_km: ano === "0KM" ? "1" : "0",
         location_id: selectedLocalidad.id.toString(),
         location_nombre: selectedLocalidad.nombre,
         is_moto: "0",
@@ -121,92 +97,80 @@ export const DataModal: React.FC<DataModalProps> = ({
         cliente_dni: dni,
         fecha_nacimiento: fechaNacimiento,
         codigo_postal: selectedLocalidad.codigo_postal,
-        email: email,
-        nombre: nombre,
-        telefono: telefono
+        email,
+        nombre,
+        telefono,
       };
 
       const quoteResponse = await fetchQuote(quoteData);
       onSuccess(quoteResponse);
-      setLoading(false);
       onClose();
     } catch (error) {
       console.error("Error al cotizar:", error);
+      setFormError("No pudimos generar la cotización. Probá de nuevo en unos segundos.");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="nombre" className="field-label">Nombre y apellido</label>
+        <input id="nombre" type="text" autoComplete="name" value={nombre}
+          onChange={(e) => setNombre(e.target.value)} className="field" placeholder="Juan Pérez" required />
+      </div>
 
-        {/* Campo Nombre y Apellido */}
-        <div className="mb-4">
-          <label htmlFor="nombre" className="block mb-2">Nombre y Apellido:</label>
-          <input
-            id="nombre"
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="email" className="field-label">Email</label>
+          <input id="email" type="email" autoComplete="email" value={email}
+            onChange={(e) => setEmail(e.target.value)} className="field" placeholder="tu@email.com" required />
         </div>
-
-        {/* Campo Email */}
-        <div className="mb-4">
-          <label htmlFor="email" className="block mb-2">Email:</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
+        <div>
+          <label htmlFor="telefono" className="field-label">Celular</label>
+          <input id="telefono" type="tel" autoComplete="tel" inputMode="tel" value={telefono}
+            onChange={(e) => setTelefono(e.target.value)} className="field" placeholder="11 2345 6789" required />
         </div>
+      </div>
 
-        {/* Campo Teléfono */}
-        <div className="mb-4">
-          <label htmlFor="telefono" className="block mb-2">Celular:</label>
-          <input
-            id="telefono"
-            type="tel"
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
-        </div>
-
-        {/* Selección de Provincia */}
-        <div className="mb-4">
-          <label>Provincia:</label>
-          <select
-            value={selectedProvince}
-            onChange={handleProvinceChange}
-            className="w-full p-2 mt-2 border border-gray-300 rounded-lg"
-            required
-          >
-            <option value="">Selecciona una provincia</option>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="provincia" className="field-label">Provincia</label>
+          <select id="provincia" value={selectedProvince}
+            onChange={(e) => { setSelectedProvince(e.target.value); setSelectedLocalidad(null); }}
+            className="field" required>
+            <option value="">Elegí la provincia</option>
             {provinces.map((province) => (
-              <option key={province.id} value={province.id}>
-                {getDisplayName(province.nombre, "province")}
-              </option>
+              <option key={province.id} value={province.id}>{province.nombre}</option>
             ))}
           </select>
         </div>
-
-        {/* Autocomplete de Localidad */}
         <AutocompleteLocalidadComponent
           selectedProvince={selectedProvince}
           setSelectedLocalidad={setSelectedLocalidad}
         />
+      </div>
 
-        <Button type="submit" className="w-full mt-4" disabled={loading}>
-          {loading ? loadingMessages[loadingMessageIndex] : "Cotizar"}
-        </Button>
-      </form>
-    </div>
+      {formError && (
+        <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p>
+      )}
+
+      <button type="submit" className="btn-primary w-full" disabled={loading}>
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span aria-live="polite">{loadingMessages[loadingMessageIndex]}</span>
+          </>
+        ) : (
+          "Ver precios"
+        )}
+      </button>
+
+      <p className="flex items-center justify-center gap-1.5 text-xs text-ink/60">
+        <Lock className="h-3.5 w-3.5" />
+        Tus datos son confidenciales y solo los usamos para asesorarte.
+      </p>
+    </form>
   );
 };
